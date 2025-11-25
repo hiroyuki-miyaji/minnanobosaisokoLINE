@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>みんなの防災倉庫 管理者用アプリ</title>
+
+    <!-- LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+        .btn {
+            display: block;
+            padding: 16px;
+            background: #06C755;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+            text-decoration: none;
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 12px;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+
+<h2>みんなの防災倉庫 管理者用アプリ</h2>
+<div id="profileArea">ログイン処理中...</div>
+
+<hr>
+
+<h3>メニュー</h3>
+<a class="btn" href="./register_admin.html">管理者情報の登録 / 更新</a>
+<a class="btn" href="./register_warehouse.html">防災倉庫の登録</a>
+<a class="btn" href="./list.html">管理中の倉庫一覧</a>
+
+<div class="note">※LIFFログインが必要です。</div>
+
+<script>
+    const LIFF_ID = "2008561144-5WLWMVPP";
+
+    async function main() {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+        }
+
+        const profile = await liff.getProfile();
+        document.getElementById("profileArea").innerHTML =
+            `<b>${profile.displayName}</b> さんとしてログインしました`;
+    }
+
+    main();
+</script>
+
+</body>
+</html>
