@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理対象倉庫の追加</title>
+<link rel="stylesheet" href="./css/style.css">
+<script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
+<script src="./js/liff.js"></script>
+<script src="./js/api.js"></script>
+</head>
+
+<body>
+<h2>管理対象に倉庫を追加する</h2>
+
+<p>倉庫ナンバーと認証コードを入力してください。</p>
+
+<div class="form-group">
+    <label>倉庫ナンバー（必須）</label>
+    <input id="number" type="text">
+</div>
+
+<div class="form-group">
+    <label>アプリ認証コード（必須）</label>
+    <input id="password" type="password">
+</div>
+
+<button id="btnRegister" class="btn-primary">追加する</button>
+<a href="./list.html" class="btn-secondary">一覧に戻る</a>
+
+<script>
+document.getElementById("btnRegister").onclick = async () => {
+    const lineId = await getLineId();
+
+    const data = {
+        LINEID: lineId,
+        number: document.getElementById("number").value,
+        password: document.getElementById("password").value
+    };
+
+    if (!data.number || !data.password) {
+        alert("ナンバーと認証コードは必須です。");
+        return;
+    }
+
+    const res = await registerWarehouse(data);
+    if (res && res.success) {
+        alert("倉庫を管理対象に追加しました");
+        location.href = "./list.html";
+    } else {
+        alert(res?.message || "追加に失敗しました");
+    }
+};
+</script>
+
+</body>
+</html>
