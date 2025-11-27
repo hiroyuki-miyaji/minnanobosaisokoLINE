@@ -13,3 +13,19 @@ async function getLineId() {
 }
 
 window.LIFF_ID = "2008561144-5WLWMVPP";
+
+// js/liff.js
+// LIFF 共通デバッグ機能
+
+function debug(msg) {
+    console.log(msg);
+    const area = document.getElementById("debugArea");
+    if (area) {
+        area.innerHTML += msg + "<br>";
+    }
+}
+
+// グローバル例外キャッチ
+window.addEventListener("error", function (event) {
+    debug("[GlobalError] " + event.message);
+});
