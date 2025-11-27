@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>みんなの防災倉庫 管理者用アプリ</title>
 
-    <!-- LIFF SDK -->
+    <!-- ① LIFF SDK（最優先） -->
     <script src="https://static.line-scdn.net/liff/2/sdk.js"></script>
+
+    <!-- ② liff.js（LIFF依存コード） -->
+    <script src="./js/liff.js"></script>
+
+    <!-- ③ API（後読みでOK） -->
+    <script src="./js/api.js" defer></script>
 
     <link rel="stylesheet" href="./css/style.css" />
 </head>
