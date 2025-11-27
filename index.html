@@ -1,4 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>みんなの防災倉庫 管理者用アプリ</title>
+
+    <!-- ▼▼▼ キャッシュ完全無効 ▼▼▼ -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- ▼▼▼ 最優先で liff SDK を読み込む ▼▼▼ -->
+    <script src="https://static.line-scdn.net/liff/2/sdk.js"></script>
+
+    <!-- ▼▼▼ 外部ライブラリ（あなたの元コード通り） ▼▼▼ -->
+    <script src="./js/api.js?v=1001"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #debugArea { font-size: 12px; color: #555; margin-top: 10px; }
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            margin-top: 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h3 id="status">初期化中...</h3>
+<div id="menuArea" style="opacity:0.3; pointer-events:none;"></div>
+
+<!-- デバッグ出力エリア -->
+<div id="debugArea"></div>
+
 <script>
+/* ======================================================
+   ★★★ このファイルは index.html の全量です ★★★
+   ★★★ initLiff() を index.html 内に直接定義 ★★★
+   ====================================================== */
+
 const LIFF_ID = "2008561144-5WLWMVPP";
 
 function debug(msg) {
@@ -7,6 +53,34 @@ function debug(msg) {
     area.innerHTML += msg + "<br>";
 }
 
+/* ------------------------------------------------------
+   ★★ initLiff() をこの index.html 内に直接定義 ★★
+   （外部 liff.js の未ロードによる白画面問題を回避）
+------------------------------------------------------ */
+async function initLiff(liffId) {
+    try {
+        debug("initLiff: start");
+
+        await liff.init({ liffId });
+
+        debug("initLiff: liff.init OK");
+
+        if (!liff.isLoggedIn()) {
+            debug("initLiff: not logged in → login()");
+            liff.login();
+            return false;
+        }
+        return true;
+
+    } catch (e) {
+        debug("initLiff FAILED: " + e);
+        return false;
+    }
+}
+
+/* ------------------------------------------------------
+   ★ main() 本体（あなたのコードをそのまま採用）
+------------------------------------------------------ */
 async function main() {
     debug("=== index.html start ===");
 
@@ -15,7 +89,7 @@ async function main() {
         debug("[JS ERROR] " + e.message);
     });
 
-    // ★★ここだけ修正★★
+    // LIFF初期化
     let ok = false;
     try {
         ok = await initLiff(LIFF_ID);
@@ -28,7 +102,7 @@ async function main() {
 
     debug("LIFF init OK");
 
-    // ★以下はそのままでOK（元のコードを変えない）
+    // プロフィール取得
     let profile;
     try {
         profile = await liff.getProfile();
@@ -42,7 +116,7 @@ async function main() {
         return;
     }
 
-    // 管理者チェック（元のコード）
+    // 管理者チェック（元コードのまま）
     const admin = await getAdmin(profile.userId);
     debug("getAdmin result: " + JSON.stringify(admin));
 
@@ -72,3 +146,6 @@ async function main() {
 
 main();
 </script>
+
+</body>
+</html>
