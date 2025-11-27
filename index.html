@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>みんなの防災倉庫 管理者用アプリ</title>
 
-    <!-- LIFF SDK -->
-    <script src="https://static.line-scdn.net/liff/2/sdk.js"></script>
+    <!-- ★正しい LIFF SDK URL（これが最重要） -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <link rel="stylesheet" href="./css/style.css" />
 </head>
@@ -41,12 +41,10 @@ function debug(msg) {
 async function main() {
     debug("=== index.html start ===");
 
-    // ▼ 予期しないJSエラー表示
     window.addEventListener("error", (e) => {
         debug("[JS ERROR] " + e.message);
     });
 
-    // ▼ まず LIFF 初期化
     debug("init start...");
     try {
         await liff.init({ liffId: LIFF_ID });
@@ -57,7 +55,6 @@ async function main() {
         return;
     }
 
-    // ▼ ログインチェック
     if (!liff.isLoggedIn()) {
         debug("not logged in → redirect login");
         liff.login();
@@ -66,7 +63,6 @@ async function main() {
 
     debug("already logged in");
 
-    // ▼ プロフィール取得
     let profile = null;
     try {
         profile = await liff.getProfile();
@@ -78,7 +74,6 @@ async function main() {
         return;
     }
 
-    // ▼ 管理者情報を取得
     debug("call getAdmin...");
     const admin = await getAdmin(profile.userId);
 
@@ -89,10 +84,8 @@ async function main() {
     if (!admin || !admin.exists) {
         debug("管理者登録なし → 管理者登録へ誘導");
 
-        // 一旦全部隠す
         menu.style.display = "none";
 
-        // 管理者登録ボタンだけ出す
         document.getElementById("status").innerText = "管理者登録が必要です";
 
         menu.innerHTML = `
@@ -104,7 +97,6 @@ async function main() {
         return;
     }
 
-    // ▼ 管理者はメニュー全開放
     debug("管理者登録あり → メニュー表示");
     menu.style.opacity = "1.0";
     menu.style.pointerEvents = "auto";
