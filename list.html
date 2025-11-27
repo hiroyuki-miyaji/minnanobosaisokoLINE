@@ -1,51 +1,88 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>倉庫一覧</title>
-
-    <script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
-    <link rel="stylesheet" href="./css/style.css" />
-</head>
-<body>
-
-<h2>管理中の倉庫一覧</h2>
-<div id="list">読み込み中...</div>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理中の倉庫一覧</title>
+<link rel="stylesheet" href="./css/style.css">
+<script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
 <script src="./js/liff.js"></script>
 <script src="./js/api.js"></script>
+</head>
+
+<body>
+<h2>管理中の防災倉庫</h2>
+
+<div id="loading">読み込み中...</div>
+<div id="listArea" style="display:none;"></div>
+
+<a href="./index.html" class="btn-secondary">メニューに戻る</a>
 
 <script>
-async function main() {
-    await initLiff(LIFF_ID);
+async function renderList() {
     const lineId = await getLineId();
 
-    const items = await listWarehouses(lineId);
-
-    const area = document.getElementById("list");
-    area.innerHTML = "";
-
-    if (!items || items.length === 0) {
-        area.innerHTML = "登録された倉庫はありません";
+    const result = await listWarehouses(lineId);
+    if (!result || !result.warehouses) {
+        document.getElementById("loading").innerText = "倉庫が見つかりませんでした。";
         return;
     }
 
-    items.forEach(w => {
-        const html = `
-            <div class="card">
-                <h3>${w.number}：${w.name}</h3>
-                <p>${w.address}</p>
-                <img class="thumb" src="${w.image || './assets/placeholder.png'}"/>
+    const list = result.warehouses;
+    const container = document.getElementById("listArea");
+    container.innerHTML = "";
 
-                <a class="btn-small" href="./editWarehouse.html?number=${w.number}">編集</a>
+    document.getElementById("loading").style.display = "none";
+    container.style.display = "block";
+
+    list.forEach(w => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const pub = w.published ? "🔓 解錠中" : "🔒 施錠中";
+        const image = w.imageurl || "./assets/placeholder.png";
+
+        card.innerHTML = `
+            <div class="card-header">
+                <img src="${image}" class="thumb">
+            </div>
+            <div class="card-body">
+                <h3>${w.number}</h3>
+                <p>${w.detail || ""}</p>
+                <p>${w.address || ""}</p>
+                <p><b>状態：</b>${pub}</p>
+
+                <button class="btn-primary" onclick="edit('${w.number}')">編集する</button>
+
+                <div style="margin-top:10px;">
+                    <button class="btn-primary" onclick="unlock('${w.number}')">解錠（公開）</button>
+                    <button class="btn-warning" onclick="lock('${w.number}')">施錠（非公開）</button>
+                </div>
             </div>
         `;
-        area.insertAdjacentHTML("beforeend", html);
+        container.appendChild(card);
     });
 }
 
-main();
+function edit(number) {
+    location.href = `./editWarehouse.html?number=${number}`;
+}
+
+async function unlock(number) {
+    const lineId = await getLineId();
+    await operateWarehouse({ LINEID: lineId, number, mode: "unlock" });
+    alert("解錠しました");
+    location.reload();
+}
+
+async function lock(number) {
+    const lineId = await getLineId();
+    await operateWarehouse({ LINEID: lineId, number, mode: "lock" });
+    alert("施錠しました");
+    location.reload();
+}
+
+renderList();
 </script>
 
 </body>
