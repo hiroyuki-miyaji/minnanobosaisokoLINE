@@ -7,78 +7,54 @@
 
     <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
-    <link rel="stylesheet" href="./css/style.css">
 
-    <style>
-        .btn-disabled {
-            background: #cccccc !important;
-            pointer-events: none;
-            color: #666 !important;
-        }
-    </style>
+    <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
 
 <h2>みんなの防災倉庫 管理者用アプリ</h2>
-<div id="status">ログイン処理中...</div>
+<div id="profileArea">ログイン処理中...</div>
 
 <hr>
 
 <h3>メニュー</h3>
 
-<a id="btnAdmin" class="btn" href="./register_admin.html">
-    管理者情報の登録 / 更新
-</a>
+<div id="menu-admin" style="display:none;">
+    <a class="btn" href="./register_admin.html">管理者情報の登録 / 更新</a>
+</div>
 
-<a id="btnRegWarehouse" class="btn" href="./register_warehouse.html">
-    防災倉庫の登録
-</a>
+<div id="menu-normal" style="display:none;">
+    <a class="btn" href="./register_admin.html">管理者情報の更新</a>
+    <a class="btn" href="./register_warehouse.html">防災倉庫の登録</a>
+    <a class="btn" href="./list.html">管理中の倉庫一覧</a>
+</div>
 
-<a id="btnList" class="btn" href="./list.html">
-    管理中の倉庫一覧
-</a>
-
-<p id="note"></p>
-
-<script src="./js/api.js"></script>
 <script src="./js/liff.js"></script>
+<script src="./js/api.js"></script>
 
 <script>
-    const LIFF_ID = "2008561144-5WLWMVPP";
+const LIFF_ID = "2008561144-5WLWMVPP";
 
-    async function main() {
-        await liff.init({ liffId: LIFF_ID });
+async function main() {
+    await initLiff(LIFF_ID);
 
-        if (!liff.isLoggedIn()) {
-            liff.login();
-            return;
-        }
+    const lineId = await getLineId();
+    document.getElementById("profileArea").innerHTML = "ログイン完了";
 
-        const profile = await liff.getProfile();
-        const lineId = profile.userId;
+    // 管理者情報取得
+    const admin = await getAdmin(lineId);
 
-        document.getElementById("status").innerHTML =
-            `${profile.displayName} さんとしてログインしました。`;
-
-        // 管理者情報を取得
-        const admin = await getAdmin(lineId);
-
-        if (!admin || !admin.crfd1_lineid) {
-            // ❌ 管理者未登録モード：管理者登録以外は押せない
-            document.getElementById("btnRegWarehouse").classList.add("btn-disabled");
-            document.getElementById("btnList").classList.add("btn-disabled");
-
-            document.getElementById("note").innerHTML =
-                "※ 管理者情報が登録されていません。「管理者登録 / 更新」から登録してください。";
-
-        } else {
-            // ✔ 管理者登録済：すべて使用可能
-            document.getElementById("note").innerHTML =
-                "管理者登録済みです。メニューから操作してください。";
-        }
+    if (!admin || !admin.exists) {
+        // 管理者登録なし → 管理者登録のみ表示
+        document.getElementById("menu-admin").style.display = "block";
+        return;
     }
 
-    main();
+    // 管理者登録あり → 通常メニュー表示
+    document.getElementById("menu-normal").style.display = "block";
+}
+
+main();
 </script>
 
 </body>
