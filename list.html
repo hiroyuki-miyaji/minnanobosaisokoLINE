@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理倉庫一覧</title>
+
+<script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
+<link rel="stylesheet" href="css/style.css">
+<script defer src="js/liff.js"></script>
+<script defer src="js/api.js"></script>
+
+</head>
+<body>
+
+<h2>管理中の防災倉庫</h2>
+<button class="btn primary" onclick="location.href='register_warehouse.html'">
+＋ 倉庫を追加
+</button>
+
+<div id="warehouseList"></div>
+
+<script>
+async function loadWarehouses() {
+    const LINEID = await getUserId();
+    const result = await callApi({
+        action: "listWarehouses",
+        LINEID
+    });
+
+    const area = document.getElementById("warehouseList");
+    area.innerHTML = "";
+
+    if (!result || result.length === 0) {
+        area.innerHTML = "<p>登録された倉庫がありません</p>";
+        return;
+    }
+
+    result.forEach(w => {
+        area.innerHTML += `
+        <div class="card">
+            <img src="${w.imageurl || 'assets/placeholder.png'}" class="thumb">
+
+            <div class="info">
+                <h3>${w.detail}</h3>
+                <p><b>番号：</b>${w.number}</p>
+                <p><b>住所：</b>${w.address}</p>
+                <p><b>状態：</b>${w.ispublished ? "🔓 解錠中" : "🔒 施錠中"}</p>
+            </div>
+
+            <div class="actions">
+                <button class="btn green"
+                    onclick="operate('${w.number}', 'unlock')"
+                    ${w.ispublished ? "" : "disabled"}>
+                    🔓 解錠
+                </button>
+
+                <button class="btn orange"
+                    onclick="operate('${w.number}', 'notifyUnlock')"
+                    ${w.ispublished ? "" : "disabled"}>
+                    📢 通知解錠
+                </button>
+
+                <button class="btn gray"
+                    onclick="operate('${w.number}', 'lock')"
+                    ${!w.ispublished ? "" : "disabled"}>
+                    🔒 施錠
+                </button>
+
+                <button class="btn secondary"
+                    onclick="location.href='editWarehouse.html?number=${w.number}'">
+                    ✏️ 編集
+                </button>
+            </div>
+        </div>
+        `;
+    });
+}
+
+async function operate(number, operation) {
+    const LINEID = await getUserId();
+    await callApi({
+        action: "operateWarehouse",
+        LINEID,
+        number,
+        operation
+    });
+
+    alert("操作が完了しました");
+    loadWarehouses();
+}
+
+loadWarehouses();
+</script>
+
+</body>
+</html>
