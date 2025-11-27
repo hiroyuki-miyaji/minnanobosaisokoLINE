@@ -3,60 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>みんなの防災倉庫 管理者用アプリ</title>
-
-    <!-- LIFF SDK -->
-    <script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
+    <title>みんなの防災倉庫 管理者アプリ</title>
 
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
 <h2>みんなの防災倉庫 管理者用アプリ</h2>
-<div id="profileArea">ログイン処理中...</div>
+<div id="profileArea">ログイン処理中…</div>
 
 <hr>
 
 <h3>メニュー</h3>
 <div id="menuArea">
     <a class="btn" id="btnAdmin" href="./register_admin.html">管理者情報の登録 / 更新</a>
-    <a class="btn" id="btnRegisterWarehouse" href="./register_warehouse.html">防災倉庫の紐づけ登録</a>
+    <a class="btn" id="btnWarehouse" href="./register_warehouse.html">防災倉庫の紐づけ登録</a>
     <a class="btn" id="btnList" href="./list.html">管理中の倉庫一覧</a>
 </div>
 
+<!-- debug -->
+<div id="debug" style="font-size:11px;color:#777;margin-top:20px;"></div>
+
+<!-- LIFF SDK -->
+<script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
+
+<!-- JS -->
+<script src="./js/liff.js"></script>
 <script src="./js/api.js"></script>
-
-<script>
-const LIFF_ID = "2008561144-5WLWMVPP";
-
-async function main() {
-    await liff.init({ liffId: LIFF_ID });
-
-    if (!liff.isLoggedIn()) {
-        liff.login();
-        return;
-    }
-
-    const profile = await liff.getProfile();
-    document.getElementById("profileArea").innerHTML =
-        `${profile.displayName} さんとしてログインしました`;
-
-    const lineId = profile.userId;
-
-    // ← ここが重要！！これがないと LogicApps に飛ばない
-    const admin = await getAdmin(lineId);
-
-    if (!admin || !admin.exists) {
-        // 管理者未登録 → 管理者登録だけ表示
-        document.getElementById("btnRegisterWarehouse").style.display = "none";
-        document.getElementById("btnList").style.display = "none";
-    } else {
-        // 管理者あり → 全ボタン表示
-    }
-}
-
-main();
-</script>
+<script src="./js/index.js"></script>
 
 </body>
 </html>
