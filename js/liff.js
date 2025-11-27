@@ -13,12 +13,12 @@ function debug(msg) {
 // LIFF初期化
 async function initLiff(liffId) {
     debug("liff.init start");
-
+/*
     if (typeof liff === "undefined") {
         debug("ERROR: liff is not defined (SDK未ロード)");
         throw new Error("liff is not defined");
     }
-
+*/
     await liff.init({ liffId });
     debug("liff.init OK");
 
