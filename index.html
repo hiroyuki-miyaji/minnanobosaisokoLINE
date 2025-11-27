@@ -32,7 +32,7 @@
 <script>
 const LIFF_ID = "2008561144-5WLWMVPP";
 
-// デバッグ表示（画面下部）
+// デバッグ表示
 function debug(msg) {
     console.log(msg);
     const area = document.getElementById("debugArea");
@@ -42,15 +42,14 @@ function debug(msg) {
 async function main() {
     debug("=== index.html start ===");
 
-    // JSエラーハンドリング
+    // グローバルJSエラー
     window.addEventListener("error", (e) => {
         debug("[JS ERROR] " + e.message);
     });
 
-    // LIFF初期化
-    debug("init start...");
+    // ★★★ ここが重要：liff.js の initLiff() を呼ぶ
     try {
-        await liff.init({ liffId: LIFF_ID });
+        await initLiff(LIFF_ID);
         debug("LIFF init OK");
     } catch (e) {
         debug("LIFF init FAILED: " + e);
@@ -58,20 +57,14 @@ async function main() {
         return;
     }
 
-    // ログイン判定
-    if (!liff.isLoggedIn()) {
-        debug("not logged in → redirect login");
-        liff.login();
-        return;
-    }
-
-    debug("already logged in");
-
-    // プロフィール取得
+    // LINE ID の取得（liff.js の関数）
+    let lineId = null;
     let profile = null;
+
     try {
         profile = await liff.getProfile();
-        debug("profile OK: " + profile.userId);
+        lineId = profile.userId;
+        debug("profile OK: " + lineId);
         document.getElementById("status").innerText =
             profile.displayName + " さんでログイン中";
     } catch (e) {
@@ -82,13 +75,12 @@ async function main() {
 
     // 管理者情報取得
     debug("call getAdmin...");
-    const admin = await getAdmin(profile.userId);
+    const admin = await getAdmin(lineId);
 
     debug("getAdmin result: " + JSON.stringify(admin));
 
     const menu = document.getElementById("menuArea");
 
-    // ★ 修正：管理者登録済かどうか判断（items の件数で判定）
     const isRegistered =
         admin &&
         admin.items &&
@@ -101,7 +93,6 @@ async function main() {
         menu.style.display = "none";
         document.getElementById("status").innerText = "管理者登録が必要です";
 
-        // 管理者登録のみ表示
         menu.innerHTML = `
             <a class="btn" href="./register_admin.html">管理者情報を登録する</a>
         `;
@@ -112,7 +103,6 @@ async function main() {
         return;
     }
 
-    // 管理者登録あり → 全メニュー表示
     debug("管理者登録あり → メニュー表示");
 
     menu.style.opacity = "1.0";
