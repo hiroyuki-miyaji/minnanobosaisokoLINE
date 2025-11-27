@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理者登録</title>
+
+<script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
+<link rel="stylesheet" href="css/style.css">
+<script defer src="js/liff.js"></script>
+<script defer src="js/api.js"></script>
+
+</head>
+<body>
+
+<h2>管理者登録 / 更新</h2>
+
+<form id="adminForm">
+    <label>氏名</label>
+    <input id="name" required>
+
+    <label>所属</label>
+    <input id="organization" required>
+
+    <label>メールアドレス</label>
+    <input id="email" type="email" required>
+
+    <button type="submit" class="btn primary">登録する</button>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    const LINEID = await getUserId();
+
+    // 既存データ取得
+    const res = await callApi({
+        action: "getAdmin",
+        LINEID
+    });
+
+    if (res && res.exists && res.admin) {
+        name.value = res.admin.name ?? "";
+        organization.value = res.admin.organization ?? "";
+        email.value = res.admin.email ?? "";
+    }
+
+    document.getElementById("adminForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        await callApi({
+            action: "registerAdmin",
+            LINEID,
+            name: name.value,
+            organization: organization.value,
+            email: email.value
+        });
+
+        alert("登録が完了しました！");
+        location.href = "list.html";
+    });
+});
+</script>
+
+</body>
+</html>
