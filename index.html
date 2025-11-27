@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>みんなの防災倉庫 管理者用アプリ</title>
 
-    <!-- ① LIFF SDK（最優先） -->
+    <!-- LIFF SDK ★最優先 -->
     <script src="https://static.line-scdn.net/liff/2/sdk.js"></script>
 
-    <!-- ② liff.js（LIFF依存コード） -->
+    <!-- LIFF 共通処理（SDK のあと） -->
     <script src="./js/liff.js"></script>
 
-    <!-- ③ API（後読みでOK） -->
-    <script src="./js/api.js" defer></script>
+    <!-- API 通信（最後） -->
+    <script src="./js/api.js"></script>
 
-    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
@@ -32,13 +32,9 @@
 
 <div id="debugArea" class="debug"></div>
 
-<script src="./js/liff.js"></script>
-<script src="./js/api.js"></script>
-
 <script>
 const LIFF_ID = "2008561144-5WLWMVPP";
 
-// デバッグ表示
 function debug(msg) {
     console.log(msg);
     const area = document.getElementById("debugArea");
@@ -48,12 +44,11 @@ function debug(msg) {
 async function main() {
     debug("=== index.html start ===");
 
-    // グローバルJSエラー
-    window.addEventListener("error", (e) => {
+    window.addEventListener("error", e => {
         debug("[JS ERROR] " + e.message);
     });
 
-    // ★★★ ここが重要：liff.js の initLiff() を呼ぶ
+    /* ▼▼▼ ここが重要：liff.js 側の initLiff() を呼ぶ ▼▼▼ */
     try {
         await initLiff(LIFF_ID);
         debug("LIFF init OK");
@@ -63,14 +58,11 @@ async function main() {
         return;
     }
 
-    // LINE ID の取得（liff.js の関数）
-    let lineId = null;
     let profile = null;
 
     try {
         profile = await liff.getProfile();
-        lineId = profile.userId;
-        debug("profile OK: " + lineId);
+        debug("profile OK: " + profile.userId);
         document.getElementById("status").innerText =
             profile.displayName + " さんでログイン中";
     } catch (e) {
@@ -79,10 +71,9 @@ async function main() {
         return;
     }
 
-    // 管理者情報取得
+    /* ▼ 管理者情報を取得 */
     debug("call getAdmin...");
-    const admin = await getAdmin(lineId);
-
+    const admin = await getAdmin(profile.userId);
     debug("getAdmin result: " + JSON.stringify(admin));
 
     const menu = document.getElementById("menuArea");
