@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>倉庫情報の編集</title>
+<link rel="stylesheet" href="./css/style.css">
+<script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
+<script src="./js/liff.js"></script>
+<script src="./js/api.js"></script>
+</head>
+
+<body>
+<h2>倉庫の管理</h2>
+
+<div id="loading">読み込み中...</div>
+
+<div id="editArea" style="display:none;">
+
+    <!-- 閲覧のみ -->
+    <div class="form-group">
+        <label>倉庫ナンバー</label>
+        <input id="number" type="text" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>名称</label>
+        <input id="detail" type="text" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>住所</label>
+        <input id="address" type="text" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>画像URL</label>
+        <input id="imageurl" type="text" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>サポーター企業URL</label>
+        <input id="supporterurl" type="text" disabled>
+    </div>
+
+    <!-- 管理者が編集可能 -->
+    <h3>編集可能な項目</h3>
+
+    <div class="form-group">
+        <label>備蓄品情報</label>
+        <textarea id="stock" rows="3"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>暗証番号</label>
+        <input id="lockcode" type="text">
+    </div>
+
+    <h3>操作</h3>
+    <button id="btnUnlock" class="btn-primary">解錠（公開）</button>
+    <button id="btnLock" class="btn-warning">施錠（非公開）</button>
+
+    <button id="btnSave" class="btn-primary">保存</button>
+
+    <a href="./list.html" class="btn-secondary">一覧に戻る</a>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const number = params.get("number");
+
+(async () => {
+    const lineId = await getLineId();
+    const detail = await getWarehouseDetail({ LINEID: lineId, number });
+
+    if (!detail) {
+        alert("倉庫情報が取得できませんでした");
+        location.href = "./list.html";
+        return;
+    }
+
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("editArea").style.display = "block";
+
+    // 閲覧専用
+    document.getElementById("number").value = detail.number;
+    document.getElementById("detail").value = detail.detail || "";
+    document.getElementById("address").value = detail.address || "";
+    document.getElementById("imageurl").value = detail.imageurl || "";
+    document.getElementById("supporterurl").value = detail.supporterurl || "";
+
+    // 編集可能
+    document.getElementById("stock").value = detail.stock || "";
+    document.getElementById("lockcode").value = detail.lockcode || "";
+
+    document.getElementById("btnUnlock").onclick = async () => {
+        await operateWarehouse({ LINEID: lineId, number, mode: "unlock" });
+        alert("解錠しました");
+    };
+
+    document.getElementById("btnLock").onclick = async () => {
+        await operateWarehouse({ LINEID: lineId, number, mode: "lock" });
+        alert("施錠しました");
+    };
+
+    document.getElementById("btnSave").onclick = async () => {
+        const data = {
+            LINEID: lineId,
+            number,
+            stock: document.getElementById("stock").value,
+            lockcode: document.getElementById("lockcode").value
+        };
+        await updateWarehouse(data);
+        alert("保存しました");
+    };
+})();
+</script>
+
+</body>
+</html>
