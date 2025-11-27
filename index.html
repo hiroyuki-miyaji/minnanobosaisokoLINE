@@ -5,19 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>みんなの防災倉庫 管理者用アプリ</title>
 
-    <!-- LIFF SDK ★最優先 -->
+    <!-- ▼▼▼ キャッシュ完全無効 ▼▼▼ -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- ▼▼▼ 最優先で liff SDK を読み込む（defer 付けない ←重要） ▼▼▼ -->
     <script src="https://static.line-scdn.net/liff/2/sdk.js"></script>
 
-    <!-- LIFF 共通処理（SDK のあと） -->
-    <script src="./js/liff.js"></script>
+    <!-- ▼▼▼ 次にあなたのライブラリ（キャッシュバスター付き） ▼▼▼ -->
+    <script src="./js/liff.js?v=1001"></script>
+    <script src="./js/api.js?v=1001"></script>
 
-    <!-- API 通信（最後） -->
-    <script src="./js/api.js"></script>
-
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/style.css?v=1001">
 </head>
-<body>
 
+<body>
 <h2>みんなの防災倉庫 管理者用アプリ</h2>
 <div id="status">ログイン処理中...</div>
 
@@ -35,6 +38,7 @@
 <script>
 const LIFF_ID = "2008561144-5WLWMVPP";
 
+// デバッグ
 function debug(msg) {
     console.log(msg);
     const area = document.getElementById("debugArea");
@@ -44,13 +48,15 @@ function debug(msg) {
 async function main() {
     debug("=== index.html start ===");
 
-    window.addEventListener("error", e => {
+    // グローバル JS エラー
+    window.addEventListener("error", (e) => {
         debug("[JS ERROR] " + e.message);
     });
 
-    /* ▼▼▼ ここが重要：liff.js 側の initLiff() を呼ぶ ▼▼▼ */
+    // LIFF 初期化
+    debug("init start...");
     try {
-        await initLiff(LIFF_ID);
+        await liff.init({ liffId: LIFF_ID });
         debug("LIFF init OK");
     } catch (e) {
         debug("LIFF init FAILED: " + e);
@@ -58,20 +64,31 @@ async function main() {
         return;
     }
 
-    let profile = null;
+    // ログイン
+    if (!liff.isLoggedIn()) {
+        debug("NOT logged in → login()");
+        liff.login();
+        return;
+    }
 
+    debug("already logged in");
+
+    // プロフィール取得
+    let profile = null;
     try {
         profile = await liff.getProfile();
         debug("profile OK: " + profile.userId);
+
         document.getElementById("status").innerText =
             profile.displayName + " さんでログイン中";
+
     } catch (e) {
         debug("profile FAILED: " + e);
         document.getElementById("status").innerText = "プロフィール取得失敗";
         return;
     }
 
-    /* ▼ 管理者情報を取得 */
+    // 管理者情報取得
     debug("call getAdmin...");
     const admin = await getAdmin(profile.userId);
     debug("getAdmin result: " + JSON.stringify(admin));
@@ -79,13 +96,10 @@ async function main() {
     const menu = document.getElementById("menuArea");
 
     const isRegistered =
-        admin &&
-        admin.items &&
-        Array.isArray(admin.items) &&
-        admin.items.length > 0;
+        admin && admin.items && Array.isArray(admin.items) && admin.items.length > 0;
 
     if (!isRegistered) {
-        debug("管理者登録なし → 管理者登録へ誘導");
+        debug("管理者登録なし → メニュー変更");
 
         menu.style.display = "none";
         document.getElementById("status").innerText = "管理者登録が必要です";
@@ -93,7 +107,6 @@ async function main() {
         menu.innerHTML = `
             <a class="btn" href="./register_admin.html">管理者情報を登録する</a>
         `;
-
         menu.style.display = "block";
         menu.style.opacity = "1.0";
         menu.style.pointerEvents = "auto";
@@ -113,6 +126,5 @@ async function main() {
 
 main();
 </script>
-
 </body>
 </html>
