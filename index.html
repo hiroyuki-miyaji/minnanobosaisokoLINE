@@ -8,7 +8,7 @@
     <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
 
-    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
@@ -18,40 +18,41 @@
 <hr>
 
 <h3>メニュー</h3>
-
-<div id="menu-admin" style="display:none;">
-    <a class="btn" href="./register_admin.html">管理者情報の登録 / 更新</a>
+<div id="menuArea">
+    <a class="btn" id="btnAdmin" href="./register_admin.html">管理者情報の登録 / 更新</a>
+    <a class="btn" id="btnRegisterWarehouse" href="./register_warehouse.html">防災倉庫の紐づけ登録</a>
+    <a class="btn" id="btnList" href="./list.html">管理中の倉庫一覧</a>
 </div>
 
-<div id="menu-normal" style="display:none;">
-    <a class="btn" href="./register_admin.html">管理者情報の更新</a>
-    <a class="btn" href="./register_warehouse.html">防災倉庫の登録</a>
-    <a class="btn" href="./list.html">管理中の倉庫一覧</a>
-</div>
-
-<script src="./js/liff.js"></script>
 <script src="./js/api.js"></script>
 
 <script>
 const LIFF_ID = "2008561144-5WLWMVPP";
 
 async function main() {
-    await initLiff(LIFF_ID);
+    await liff.init({ liffId: LIFF_ID });
 
-    const lineId = await getLineId();
-    document.getElementById("profileArea").innerHTML = "ログイン完了";
-
-    // 管理者情報取得
-    const admin = await getAdmin(lineId);
-
-    if (!admin || !admin.exists) {
-        // 管理者登録なし → 管理者登録のみ表示
-        document.getElementById("menu-admin").style.display = "block";
+    if (!liff.isLoggedIn()) {
+        liff.login();
         return;
     }
 
-    // 管理者登録あり → 通常メニュー表示
-    document.getElementById("menu-normal").style.display = "block";
+    const profile = await liff.getProfile();
+    document.getElementById("profileArea").innerHTML =
+        `${profile.displayName} さんとしてログインしました`;
+
+    const lineId = profile.userId;
+
+    // ← ここが重要！！これがないと LogicApps に飛ばない
+    const admin = await getAdmin(lineId);
+
+    if (!admin || !admin.exists) {
+        // 管理者未登録 → 管理者登録だけ表示
+        document.getElementById("btnRegisterWarehouse").style.display = "none";
+        document.getElementById("btnList").style.display = "none";
+    } else {
+        // 管理者あり → 全ボタン表示
+    }
 }
 
 main();
