@@ -10,16 +10,16 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- LIFF SDK（成功している edge パス） -->
+    <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    <!-- API（module にしない） -->
-    <script src="./js/api.js?v=1003"></script>
+    <!-- 共通 API -->
+    <script src="./js/api.js?v=1005"></script>
 
-    <!-- liff.js（module 版） -->
-    <script type="module" src="./js/liff.js?v=1003"></script>
+    <!-- 共通 LIFF ロジック -->
+    <script type="module" src="./js/liff.js?v=1005"></script>
 
-    <link rel="stylesheet" href="./css/style.css?v=1003">
+    <link rel="stylesheet" href="./css/style.css?v=1005">
 </head>
 
 <body>
@@ -27,28 +27,24 @@
 <h2>みんなの防災倉庫 管理アプリ</h2>
 <div id="status">LIFF 初期化中...</div>
 
-<!-- メニューをここに動的生成 -->
 <div id="menuArea"></div>
 
-<!-- デバッグログ -->
 <div id="debugArea" class="debug"></div>
 
-
-<!-- index ロジック本体 -->
 <script type="module">
-import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1003";
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1005";
 
 async function main() {
     debug("=== index.html start ===");
 
-    // 1. LIFF 初期化
+    // ========= 1. LIFF 初期化 =========
     const ok = await initLiff();
     if (!ok) {
         document.getElementById("status").innerText = "LIFF 初期化失敗";
         return;
     }
 
-    // 2. LINE プロフィール取得
+    // ========= 2. LINE プロフィール =========
     let profile;
     try {
         profile = await getUserProfile();
@@ -56,56 +52,75 @@ async function main() {
         document.getElementById("status").innerText = "プロフィール取得に失敗しました";
         return;
     }
-
     const lineId = profile.userId;
 
-    // 3. LogicApps: 管理者情報取得
+    const menu = document.getElementById("menuArea");
+    const status = document.getElementById("status");
+
+    // ========= 3. register_admin.html からの戻り確認 =========
+    const params = new URLSearchParams(location.search);
+    const adminJson = params.get("admin");
+
+    if (adminJson) {
+        debug("admin from query: " + adminJson);
+
+        let adminInfo;
+        try {
+            adminInfo = JSON.parse(adminJson);
+        } catch {
+            debug("JSON parse error");
+            return;
+        }
+
+        drawRegisteredMenu(adminInfo);
+        debug("=== index.html end (from register_admin) ===");
+        return;
+    }
+
+    // ========= 4. 初回アクセス → Dataverse getAdmin =========
     debug("call getAdmin()");
     const admin = await getAdmin(lineId);
     debug("getAdmin result: " + JSON.stringify(admin));
 
-    const status = document.getElementById("status");
-    const menu = document.getElementById("menuArea");
-
-    const isRegistered =
+    const hasRecord =
         admin &&
         admin.items &&
         Array.isArray(admin.items) &&
         admin.items.length > 0;
 
-    // ----------------------------------------
-    // ① 管理者未登録 → 緑ボタンだけ表示
-    // ----------------------------------------
-    if (!isRegistered) {
+    if (!hasRecord) {
+        // 未登録
         status.innerHTML = `
             <div style="font-size:20px; font-weight:bold;">
                 ${profile.displayName} さん<br>
                 利用には管理者登録が必要です
             </div>
         `;
-
         menu.innerHTML = `
             <a class="btn btn-green" href="./register_admin.html">
                 管理者情報を登録する
             </a>
         `;
-
-        debug("=== index.html end → 未登録 ===");
+        debug("=== index.html end (not registered) ===");
         return;
     }
 
+    // 登録済
+    drawRegisteredMenu(admin.items[0]);
+    debug("=== index.html end (registered) ===");
+}
 
-    // ----------------------------------------
-    // ② 管理者登録済 → 青メニューを表示
-    // ----------------------------------------
-    const adminInfo = admin.items[0];
+// ========= 共通：登録済みメニュー描画関数 =========
+function drawRegisteredMenu(info) {
+    const status = document.getElementById("status");
+    const menu = document.getElementById("menuArea");
 
     status.innerHTML = `
         <div style="font-size:20px; font-weight:bold;">
-            ${adminInfo.name} さん（管理者）
+            ${info.crfd1_name} さん（管理者）
         </div>
         <div style="font-size:14px; color:#444; margin-top:4px;">
-            ${adminInfo.organization ?? ""}
+            ${info.crfd1_company ?? ""}
         </div>
     `;
 
@@ -114,8 +129,6 @@ async function main() {
         <a class="btn btn-blue" href="./register_warehouse.html">防災倉庫を追加登録</a>
         <a class="btn btn-blue" href="./register_admin.html">管理者情報を変更</a>
     `;
-
-    debug("=== index.html end ===");
 }
 
 main();
