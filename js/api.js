@@ -1,33 +1,54 @@
-// ==========================
-// API 共通設定
-// ==========================
+// ========================================
+// js/api.js
+// LogicApps 統合 API 呼び出し（共通）
+// ========================================
+
+// ---- LogicApps の HTTP Endpoint ----
 const API_URL =
   "https://prod-56.japaneast.logic.azure.com:443/workflows/274fd28c939748a3aee0c6a1994e80b4/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=2Iqm_M4sYZSIkPMMYdUfRoimdrNfiEBYsKZbU50sImA";
 
-// 共通 POST
+
+// ========================================
+// 共通 POST メソッド
+// ========================================
 async function callApi(body) {
     console.log("▶ API Request:", body);
 
-    const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-    });
+    let res;
+    try {
+        res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+    } catch (e) {
+        console.error("API fetch error:", e);
+        return { error: "network_error", detail: e };
+    }
 
     if (!res.ok) {
         const msg = await res.text();
         console.error("API Error:", msg);
-        return null;
+        return { error: "http_error", detail: msg };
     }
 
-    const json = await res.json();
+    let json;
+    try {
+        json = await res.json();
+    } catch (e) {
+        console.error("JSON parse error:", e);
+        return { error: "json_parse_error", detail: e };
+    }
+
     console.log("▼ API Response:", json);
     return json;
 }
 
-// ==========================
-// API ラッパー群
-// ==========================
+
+// ========================================
+// API ラッパー関数群
+// （LIFF → LogicApps に送る payload を統一）
+// ========================================
 
 // 管理者情報取得
 async function getAdmin(lineId) {
@@ -45,7 +66,7 @@ async function registerAdmin(data) {
     });
 }
 
-// 管理中の倉庫一覧取得
+// 倉庫一覧を取得
 async function listWarehouses(lineId) {
     return await callApi({
         action: "listWarehouses",
@@ -53,7 +74,7 @@ async function listWarehouses(lineId) {
     });
 }
 
-// 倉庫の詳細情報取得
+// 倉庫詳細取得
 async function getWarehouseDetail(data) {
     return await callApi({
         action: "getWarehouseDetail",
@@ -61,7 +82,7 @@ async function getWarehouseDetail(data) {
     });
 }
 
-// 管理者用：倉庫追加（紐づけ登録のみ）
+// 倉庫紐づけ（管理者が追加）
 async function registerWarehouse(data) {
     return await callApi({
         action: "registerWarehouse",
@@ -69,7 +90,7 @@ async function registerWarehouse(data) {
     });
 }
 
-// 倉庫の更新（備蓄品・暗証番号）
+// 備蓄品・暗証番号 更新
 async function updateWarehouse(data) {
     return await callApi({
         action: "updateWarehouse",
@@ -77,7 +98,7 @@ async function updateWarehouse(data) {
     });
 }
 
-// 倉庫の削除（紐づけ解除）
+// 紐づけ解除
 async function deleteWarehouse(data) {
     return await callApi({
         action: "deleteWarehouse",
