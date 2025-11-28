@@ -5,141 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>みんなの防災倉庫 管理者用アプリ</title>
 
-    <!-- ▼▼▼ キャッシュ完全無効 ▼▼▼ -->
+    <!-- キャッシュ無効化 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- ▼▼▼ 最優先で liff SDK を読み込む ▼▼▼ -->
+    <!-- ★ SDK（成功したパスそのまま） ★ -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    <!-- ▼▼▼ 外部ライブラリ（あなたの元コード通り） ▼▼▼ -->
+    <!-- API -->
     <script src="./js/api.js?v=1001"></script>
 
+    <!-- LIFF ロジック外出し -->
+    <script type="module" src="./js/liff.js?v=1001"></script>
+
     <style>
-        body { font-family: Arial, sans-serif; }
-        #debugArea { font-size: 12px; color: #555; margin-top: 10px; }
+        body { font-family: Arial, sans-serif; padding: 20px; }
         .btn {
-            display: inline-block;
-            padding: 12px 20px;
-            margin-top: 20px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
+            background: #007bff; color:#fff; padding: 12px 16px;
+            border-radius: 8px; text-decoration:none; display:block;
+            margin: 12px 0; text-align:center;
         }
     </style>
 </head>
 
 <body>
 
-<h3 id="status">初期化中...</h3>
-<div id="menuArea" style="opacity:0.3; pointer-events:none;"></div>
+<h2 id="status">初期化中...</h2>
 
-<!-- デバッグ出力エリア -->
-<div id="debugArea"></div>
+<!-- ここに UI を動的に埋め込む -->
+<div id="menuArea"></div>
 
-<script>
-/* ======================================================
-   ★★★ このファイルは index.html の全量です ★★★
-   ★★★ initLiff() を index.html 内に直接定義 ★★★
-   ====================================================== */
+<!-- デバッグログ -->
+<div id="debugArea" style="margin-top:40px;font-size:12px;color:#555;"></div>
 
-const LIFF_ID = "2008561144-5WLWMVPP";
+<script type="module">
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1001";
 
-function debug(msg) {
-    console.log(msg);
-    const area = document.getElementById("debugArea");
-    area.innerHTML += msg + "<br>";
-}
-
-/* ------------------------------------------------------
-   ★★ initLiff() をこの index.html 内に直接定義 ★★
-   （外部 liff.js の未ロードによる白画面問題を回避）
------------------------------------------------------- */
-async function initLiff(liffId) {
-    try {
-        debug("initLiff: start");
-
-        await liff.init({ liffId });
-
-        debug("initLiff: liff.init OK");
-
-        if (!liff.isLoggedIn()) {
-            debug("initLiff: not logged in → login()");
-            liff.login();
-            return false;
-        }
-        return true;
-
-    } catch (e) {
-        debug("initLiff FAILED: " + e);
-        return false;
-    }
-}
-
-/* ------------------------------------------------------
-   ★ main() 本体（あなたのコードをそのまま採用）
------------------------------------------------------- */
 async function main() {
     debug("=== index.html start ===");
 
-    // グローバルエラー
-    window.addEventListener("error", e => {
-        debug("[JS ERROR] " + e.message);
-    });
-
-    // LIFF初期化
-    let ok = false;
-    try {
-        ok = await initLiff(LIFF_ID);
-        if (!ok) return;  // login に飛ぶ場合もある
-    } catch (e) {
-        debug("LIFF init FAILED: " + e);
+    // 1. LIFF 初期化
+    const ok = await initLiff();
+    if (!ok) {
         document.getElementById("status").innerText = "LIFF初期化に失敗しました";
         return;
     }
 
-    debug("LIFF init OK");
-
-    // プロフィール取得
+    // 2. プロフィール取得
     let profile;
     try {
-        profile = await liff.getProfile();
-        debug("profile OK: " + profile.userId);
-
-        document.getElementById("status").innerText =
-            profile.displayName + " さんでログイン中";
-    } catch (e) {
-        debug("profile FAILED: " + e);
+        profile = await getUserProfile();
+    } catch {
         document.getElementById("status").innerText = "プロフィール取得失敗";
         return;
     }
 
-    // 管理者チェック（元コードのまま）
+    // 3. 管理者判定
     const admin = await getAdmin(profile.userId);
     debug("getAdmin result: " + JSON.stringify(admin));
 
+    const status = document.getElementById("status");
     const menu = document.getElementById("menuArea");
 
     const isRegistered =
         admin && admin.items && Array.isArray(admin.items) && admin.items.length > 0;
 
+    // -------------------------------
+    // パターン① 未登録 → 登録ボタンだけ
+    // -------------------------------
     if (!isRegistered) {
-        menu.style.display = "none";
-        document.getElementById("status").innerText = "管理者登録が必要です";
-        menu.innerHTML = `<a class="btn" href="./register_admin.html">管理者情報を登録する</a>`;
-        menu.style.display = "block";
-        menu.style.opacity = "1.0";
-        menu.style.pointerEvents = "auto";
+        status.innerText = profile.displayName + " さん（管理者登録が必要です）";
+        menu.innerHTML = `
+            <a class="btn" href="./register_admin.html">管理者情報を登録する</a>
+        `;
         return;
     }
 
-    menu.style.opacity = "1.0";
-    menu.style.pointerEvents = "auto";
+    // -------------------------------
+    // パターン② 登録あり → メニューを index.html 内で表示
+    // -------------------------------
+    const adminInfo = admin.items[0];
+    status.innerText = `${adminInfo.name} さん（管理者）`;
 
-    document.getElementById("status").innerText =
-        profile.displayName + " さん（管理者）";
+    menu.innerHTML = `
+        <a class="btn" href="./warehouse_list.html">倉庫一覧</a>
+        <a class="btn" href="./stock_manage.html">在庫管理</a>
+        <a class="btn" href="./notification.html">連絡／お知らせ</a>
+        <a class="btn" href="./settings.html">設定</a>
+    `;
 
     debug("=== index.html end ===");
 }
