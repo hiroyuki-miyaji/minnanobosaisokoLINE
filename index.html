@@ -31,6 +31,7 @@
 
 <body>
 
+<h1>みんなの防災倉庫管理アプリ</h1>
 <h2 id="status">初期化中...</h2>
 
 <!-- ここに UI を動的に埋め込む -->
@@ -86,13 +87,20 @@ async function main() {
     // パターン② 登録あり → メニューを index.html 内で表示
     // -------------------------------
     const adminInfo = admin.items[0];
-    status.innerText = `${adminInfo.name} さん（管理者）`;
-
+    status.innerHTML = `
+        <div style="font-size:22px; font-weight:bold;">
+            ${adminInfo.name} さん（管理者）
+        </div>
+        <div style="font-size:14px; color:#444; margin-top:4px;">
+            ${adminInfo.organization ?? ""}
+        </div>
+    `;
+    
     menu.innerHTML = `
-        <a class="btn" href="./warehouse_list.html">倉庫一覧</a>
-        <a class="btn" href="./stock_manage.html">在庫管理</a>
-        <a class="btn" href="./notification.html">連絡／お知らせ</a>
-        <a class="btn" href="./settings.html">設定</a>
+        <a class="btn" href="./list.html">倉庫一覧</a>
+        <a class="btn" href="./register_warehouse.html">倉庫を登録</a>
+        <a class="btn" href="./editWarehouse.html">倉庫情報の編集</a>
+        <a class="btn" href="./register_admin.html">管理者情報の変更</a>
     `;
 
     debug("=== index.html end ===");
