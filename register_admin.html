@@ -3,59 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理者情報登録</title>
+    <title>管理者情報登録 / 更新</title>
 
-    <script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
-    <link rel="stylesheet" href="./css/style.css" />
+    <!-- キャッシュ無効化 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <!-- API -->
+    <script src="./js/api.js?v=1003"></script>
+
+    <!-- liff.js（module） -->
+    <script type="module" src="./js/liff.js?v=1003"></script>
+
+    <link rel="stylesheet" href="./css/style.css?v=1003">
+    <style>
+        .input-box { 
+            padding: 10px; margin: 10px 0; width: 100%; 
+            border-radius: 6px; border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        .btn-save {
+            background: #007bff;
+            color: white;
+            padding: 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: block;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+        #toast {
+            visibility: hidden;
+            min-width: 180px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 12px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 15px;
+            z-index: 10000;
+        }
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.4s, fadeout 0.4s 2.2s;
+        }
+        @keyframes fadein { from { bottom: 20px; opacity: 0;} to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1;} to { bottom: 20px; opacity: 0;} }
+    </style>
 </head>
+
 <body>
 
 <h2>管理者情報の登録 / 更新</h2>
+<div id="status">初期化中...</div>
 
-<div class="form">
+<div>
     <label>氏名</label>
-    <input id="name" type="text" />
+    <input id="name" class="input-box" type="text" placeholder="みんなの 太郎">
 
-    <label>所属</label>
-    <input id="org" type="text" />
+    <label>メール</label>
+    <input id="email" class="input-box" type="email" placeholder="example@mail.com">
 
-    <label>連絡先メールアドレス</label>
-    <input id="email" type="email" />
+    <label>所属（会社名・団体名など）</label>
+    <input id="organization" class="input-box" type="text" placeholder="みんなの防災倉庫普及協会">
 
-    <button class="btn" id="saveBtn">保存する</button>
 </div>
 
-<script src="./js/liff.js"></script>
-<script src="./js/api.js"></script>
+<a id="saveBtn" class="btn-save" href="#">登録する</a>
+<a class="btn btn-blue" href="./index.html">← メニューに戻る</a>
 
-<script>
+<div id="toast">登録しました</div>
+<div id="debugArea" class="debug"></div>
+
+<script type="module">
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1003";
+
+async function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.innerText = msg;
+    toast.className = "show";
+    setTimeout(() => (toast.className = toast.className.replace("show", "")), 2600);
+}
+
 async function main() {
-    await initLiff(LIFF_ID);
-    const lineId = await getLineId();
+    debug("=== register_admin.html start ===");
 
-    const admin = await getAdmin(lineId);
-
-    if (admin && admin.exists) {
-        document.getElementById("name").value = admin.name || "";
-        document.getElementById("org").value = admin.org || "";
-        document.getElementById("email").value = admin.email || "";
+    const ok = await initLiff();
+    if (!ok) {
+        document.getElementById("status").innerText = "LIFF 初期化に失敗しました";
+        return;
     }
 
+    // LINE プロフィール取得
+    let profile;
+    try {
+        profile = await getUserProfile();
+    } catch {
+        document.getElementById("status").innerText = "プロフィールの取得に失敗しました";
+        return;
+    }
+
+    const lineId = profile.userId;
+    document.getElementById("status").innerText = profile.displayName + " さん";
+
+    // 既存データ読み込み
+    debug("call getAdmin...");
+    const admin = await getAdmin(lineId);
+
+    if (admin && admin.items && admin.items.length > 0) {
+        const data = admin.items[0];
+
+        document.getElementById("name").value = data.name ?? "";
+        document.getElementById("email").value = data.email ?? "";
+        document.getElementById("organization").value = data.organization ?? "";
+    }
+
+    // 保存ボタン
     document.getElementById("saveBtn").onclick = async () => {
-        const data = {
+        const payload = {
             LINEID: lineId,
             name: document.getElementById("name").value,
-            org: document.getElementById("org").value,
-            email: document.getElementById("email").value
+            email: document.getElementById("email").value,
+            organization: document.getElementById("organization").value,
         };
 
-        const result = await registerAdmin(data);
-        if (result.success) {
-            alert("保存しました！");
-            location.href = "./index.html";
-        } else {
-            alert("保存に失敗しました");
-        }
+        debug("call registerAdmin...");
+        const res = await registerAdmin(payload);
+
+        debug("registerAdmin result: " + JSON.stringify(res));
+        showToast("管理者情報を登録しました");
     };
 }
 
