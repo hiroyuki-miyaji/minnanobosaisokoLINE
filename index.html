@@ -10,38 +10,33 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- ★ SDK（成功したパスそのまま） ★ -->
+    <!-- LIFF SDK（成功している edge パス） -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    <!-- API -->
-    <script src="./js/api.js?v=1001"></script>
+    <!-- API（module にしない） -->
+    <script src="./js/api.js?v=1003"></script>
 
-    <!-- LIFF ロジック外出し -->
-    <script type="module" src="./js/liff.js?v=1001"></script>
+    <!-- liff.js（module 版） -->
+    <script type="module" src="./js/liff.js?v=1003"></script>
 
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .btn {
-            background: #007bff; color:#fff; padding: 12px 16px;
-            border-radius: 8px; text-decoration:none; display:block;
-            margin: 12px 0; text-align:center;
-        }
-    </style>
+    <link rel="stylesheet" href="./css/style.css?v=1003">
 </head>
 
 <body>
 
-<h2>みんなの防災倉庫管理</h2>
-<h2 id="status">初期化中...</h2>
+<h2>みんなの防災倉庫 管理アプリ</h2>
+<div id="status">LIFF 初期化中...</div>
 
-<!-- ここに UI を動的に埋め込む -->
+<!-- メニューをここに動的生成 -->
 <div id="menuArea"></div>
 
 <!-- デバッグログ -->
-<div id="debugArea" style="margin-top:40px;font-size:12px;color:#555;"></div>
+<div id="debugArea" class="debug"></div>
 
+
+<!-- index ロジック本体 -->
 <script type="module">
-import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1002";
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1003";
 
 async function main() {
     debug("=== index.html start ===");
@@ -49,61 +44,75 @@ async function main() {
     // 1. LIFF 初期化
     const ok = await initLiff();
     if (!ok) {
-        document.getElementById("status").innerText = "LIFF初期化に失敗しました";
+        document.getElementById("status").innerText = "LIFF 初期化失敗";
         return;
     }
 
-    // 2. プロフィール取得
+    // 2. LINE プロフィール取得
     let profile;
     try {
         profile = await getUserProfile();
     } catch {
-        document.getElementById("status").innerText = "プロフィール取得失敗";
+        document.getElementById("status").innerText = "プロフィール取得に失敗しました";
         return;
     }
 
-    // 3. 管理者判定
-    const admin = await getAdmin(profile.userId);
+    const lineId = profile.userId;
+
+    // 3. LogicApps: 管理者情報取得
+    debug("call getAdmin()");
+    const admin = await getAdmin(lineId);
     debug("getAdmin result: " + JSON.stringify(admin));
 
     const status = document.getElementById("status");
     const menu = document.getElementById("menuArea");
 
     const isRegistered =
-        admin && admin.items && Array.isArray(admin.items) && admin.items.length > 0;
+        admin &&
+        admin.items &&
+        Array.isArray(admin.items) &&
+        admin.items.length > 0;
 
-    // -------------------------------
-    // パターン① 未登録 → 登録ボタンだけ
-    // -------------------------------
+    // ----------------------------------------
+    // ① 管理者未登録 → 緑ボタンだけ表示
+    // ----------------------------------------
     if (!isRegistered) {
         status.innerHTML = `
-            <div style="font-size:22px; font-weight:bold;">
+            <div style="font-size:20px; font-weight:bold;">
                 ${profile.displayName} さん<br>
-                利用するには管理者登録が必要です
+                利用には管理者登録が必要です
+            </div>
         `;
+
         menu.innerHTML = `
-            <a class="btn" href="./register_admin.html">管理者情報を登録する</a>
+            <a class="btn btn-green" href="./register_admin.html">
+                管理者情報を登録する
+            </a>
         `;
+
+        debug("=== index.html end → 未登録 ===");
         return;
     }
 
-    // -------------------------------
-    // パターン② 登録あり → メニューを index.html 内で表示
-    // -------------------------------
+
+    // ----------------------------------------
+    // ② 管理者登録済 → 青メニューを表示
+    // ----------------------------------------
     const adminInfo = admin.items[0];
+
     status.innerHTML = `
-        <div style="font-size:22px; font-weight:bold;">
-            ${adminInfo.name} さん
+        <div style="font-size:20px; font-weight:bold;">
+            ${adminInfo.name} さん（管理者）
         </div>
         <div style="font-size:14px; color:#444; margin-top:4px;">
             ${adminInfo.organization ?? ""}
         </div>
     `;
-    
+
     menu.innerHTML = `
-        <a class="btn" href="./list.html">登録済防災倉庫一覧</a>
-        <a class="btn" href="./register_warehouse.html">防災倉庫を登録する</a>
-        <a class="btn" href="./register_admin.html">管理者情報の変更</a>
+        <a class="btn btn-blue" href="./list.html">登録済倉庫一覧</a>
+        <a class="btn btn-blue" href="./register_warehouse.html">防災倉庫を追加登録</a>
+        <a class="btn btn-blue" href="./register_admin.html">管理者情報を変更</a>
     `;
 
     debug("=== index.html end ===");
