@@ -76,7 +76,11 @@ async function main() {
     // パターン① 未登録 → 登録ボタンだけ
     // -------------------------------
     if (!isRegistered) {
-        status.innerText = profile.displayName + " さん（管理者登録が必要です）";
+        status.innerHTML = `
+            <div style="font-size:22px; font-weight:bold;">
+                ${profile.displayName} さん<br>
+                利用するには管理者登録が必要です
+        `;
         menu.innerHTML = `
             <a class="btn" href="./register_admin.html">管理者情報を登録する</a>
         `;
