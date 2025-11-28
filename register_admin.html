@@ -87,11 +87,16 @@
 <script type="module">
 import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1003";
 
-async function showToast(msg) {
+function showToast(msg, isError = false) {
     const toast = document.getElementById("toast");
     toast.innerText = msg;
+
+    toast.style.backgroundColor = isError ? "#c0392b" : "#333";
     toast.className = "show";
-    setTimeout(() => (toast.className = toast.className.replace("show", "")), 2600);
+
+    setTimeout(() => {
+        toast.className = toast.className.replace("show", "");
+    }, 2600);
 }
 
 async function main() {
@@ -129,7 +134,9 @@ async function main() {
 
     // 保存ボタン
     document.getElementById("saveBtn").onclick = async () => {
+
         const payload = {
+            action: "registerAdmin",
             LINEID: lineId,
             name: document.getElementById("name").value,
             email: document.getElementById("email").value,
@@ -140,7 +147,18 @@ async function main() {
         const res = await registerAdmin(payload);
 
         debug("registerAdmin result: " + JSON.stringify(res));
-        showToast("管理者情報を登録しました");
+
+        if (!res) {
+            showToast("サーバーエラーが発生しました", true);
+            return;
+        }
+
+        if (res.result === "success") {
+            showToast("管理者情報を登録しました");
+            setTimeout(() => location.href = "./index.html", 800);
+        } else {
+            showToast("登録に失敗しました: " + (res.message ?? ""), true);
+        }
     };
 }
 
