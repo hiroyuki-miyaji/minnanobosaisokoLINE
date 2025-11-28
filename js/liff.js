@@ -1,49 +1,50 @@
-// js/liff.js
+// js/liff.js  --- 共通ロジックのみ（UIは禁止）
 
-function debug(msg) {
+const LIFF_ID = "2008561144-5WLWMVPP";
+
+/**
+ * デバッグ出力
+ */
+export function debug(msg) {
     console.log(msg);
     const area = document.getElementById("debugArea");
     if (area) area.innerHTML += msg + "<br>";
 }
 
-// ★ LIFF SDK ロード待ち
-function waitForLiff() {
-    return new Promise(resolve => {
-        if (window.liff) {
-            resolve();
-            return;
+/**
+ * LIFF 初期化（UIロジックは含めない）
+ */
+export async function initLiff() {
+    try {
+        debug("initLiff: start");
+
+        await liff.init({ liffId: LIFF_ID });
+
+        debug("initLiff: liff.init OK");
+
+        if (!liff.isLoggedIn()) {
+            debug("not logged in → login()");
+            liff.login();
+            return false;
         }
-        const timer = setInterval(() => {
-            if (window.liff) {
-                clearInterval(timer);
-                resolve();
-            }
-        }, 50);
-    });
+        return true;
+
+    } catch (e) {
+        debug("initLiff FAILED: " + e);
+        return false;
+    }
 }
 
-async function initLiff(liffId) {
-    debug("init start...");
-
-    // ★ SDK がロードされるまで絶対に待つ
-    await waitForLiff();
-
-    debug("liff detected. calling liff.init()...");
-
+/**
+ * プロフィール取得
+ */
+export async function getUserProfile() {
     try {
-        await liff.init({ liffId });
-        debug("liff.init OK");
+        const p = await liff.getProfile();
+        debug("profile OK: " + p.userId);
+        return p;
     } catch (e) {
-        debug("liff.init FAILED: " + e);
+        debug("profile FAILED: " + e);
         throw e;
     }
-
-    if (!liff.isLoggedIn()) {
-        debug("not logged in → login()");
-        liff.login();
-        return;
-    }
-    debug("already logged in");
 }
-
-window.initLiff = initLiff;
