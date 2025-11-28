@@ -23,25 +23,37 @@ async function callApi(body) {
         });
     } catch (e) {
         console.error("API fetch error:", e);
-        return { error: "network_error", detail: e };
+        return { result: "error", message: "network_error", detail: e };
     }
 
-    if (!res.ok) {
-        const msg = await res.text();
-        console.error("API Error:", msg);
-        return { error: "http_error", detail: msg };
-    }
+    let json = null;
 
-    let json;
     try {
         json = await res.json();
     } catch (e) {
         console.error("JSON parse error:", e);
-        return { error: "json_parse_error", detail: e };
+        return { result: "error", message: "json_parse_error", detail: e };
     }
 
     console.log("▼ API Response:", json);
-    return json;
+
+    // ✔ LogicApps が成功 → 200
+    if (res.ok && json?.result === "success") {
+        return json;
+    }
+
+    // ✔ LogicApps が返したエラー
+    if (json?.result === "error") {
+        return json;
+    }
+
+    // ✔ HTTP エラー（想定外）
+    return {
+        result: "error",
+        message: "http_error",
+        status: res.status,
+        detail: json
+    };
 }
 
 
