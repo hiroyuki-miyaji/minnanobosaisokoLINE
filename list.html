@@ -93,7 +93,7 @@ async function loadList() {
         div.className = "warehouse-card";
 
         div.innerHTML = `
-            <div class="warehouse-title">${w.warehouseId}</div>
+            <div class="warehouse-title">${w.number}</div>
 
             <div class="warehouse-field">
                 <strong>倉庫名：</strong> ${w.warehouseName ?? ""}
@@ -111,7 +111,7 @@ async function loadList() {
                 <strong>通知：</strong> ${w.notify}
             </div>
 
-            <a href="./warehouse_detail.html?id=${encodeURIComponent(w.warehouseId)}"
+            <a href="./warehouse_detail.html?id=${encodeURIComponent(w.number)}"
                class="btn btn-blue"
                style="margin-top:12px;">
                 詳細を見る
