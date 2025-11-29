@@ -32,7 +32,7 @@
 import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
 
 let lineId = null;
-let warehouseId = null;
+let number = null;
 
 /* ----------------------------------------
    初期化
@@ -53,10 +53,10 @@ async function main() {
 
     // URLから「ナンバー」を取得
     const params = new URLSearchParams(location.search);
-    warehouseId = params.get("id");  // ← ナンバーを受け取る
-    debug("warehouseId (number): " + warehouseId);
+    number = params.get("id");  // ← ナンバーを受け取る
+    debug("number: " + number);
 
-    if (!warehouseId) {
+    if (!number) {
         document.getElementById("status").innerHTML =
             "<p class='error'>倉庫番号が指定されていません。</p>";
         return;
@@ -71,7 +71,7 @@ async function main() {
 async function loadDetail() {
 
     debug("call getWarehouseDetail()");
-    const res = await getWarehouseDetail({ LINEID: lineId, warehouseId });
+    const res = await getWarehouseDetail({ LINEID: lineId, number });
 
     debug("response: " + JSON.stringify(res));
 
@@ -89,10 +89,10 @@ async function loadDetail() {
     area.innerHTML = `
         <div class="warehouse-card">
 
-            <div class="warehouse-title">${w.warehouseId}</div>
+            <div class="warehouse-title">${w.number}</div>
 
-            <div class="warehouse-field"><strong>倉庫名：</strong>${w.name}</div>
-            <div class="warehouse-field"><strong>住所：</strong>${w.address}</div>
+            <div class="warehouse-field"><strong>防災倉庫名：</strong>${w.name}</div>
+            <div class="warehouse-field"><strong>設置場所住所：</strong>${w.address}</div>
             <div class="warehouse-field"><strong>サポーター企業：</strong>${w.supporter}</div>
             <div class="warehouse-field"><strong>備蓄品：</strong>${w.stock}</div>
 
@@ -141,7 +141,7 @@ async function operate(mode) {
 
     const res = await operateWarehouse({
         LINEID: lineId,
-        warehouseId,
+        number,
         mode
     });
 
