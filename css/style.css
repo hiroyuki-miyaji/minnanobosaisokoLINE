@@ -1,80 +1,73 @@
-/* =============================
-   共通レイアウト
-============================= */
 body {
     font-family: Arial, sans-serif;
     padding: 20px;
-    background: #fafafa;
 }
 
 h2 {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    font-size: 22px;
 }
 
 #status {
-    margin-bottom: 25px;
-    font-size: 18px;
+    margin-bottom: 16px;
+}
+
+.status-name {
+    font-size: 20px;
     font-weight: bold;
 }
 
-/* =============================
-   ボタン
-============================= */
+.status-sub {
+    font-size: 14px;
+    color: #555;
+    margin-top: 4px;
+}
 
 .btn {
     display: block;
-    width: 90%;
-    padding: 14px 18px;
-    border-radius: 8px;
-    text-align: center;
-    color: #fff;
-    text-decoration: none;
-    margin: 14px 0;
-    font-size: 16px;
-}
-
-/* 登録前（未登録）＝緑 */
-.btn-green {
-    background: #4CAF50;    /* ← 好きな緑色に変更可 */
-}
-
-/* 登録後（管理者）＝青 */
-.btn-blue {
-    background: #007bff;     /* ← 好きな青色に変更可 */
-}
-
-/* グレー（無効系） */
-.btn-gray {
-    background: #cccccc;
-    color: #444;
-}
-
-/* =============================
-   テーブル（一覧画面用）
-============================= */
-
-.table {
     width: 100%;
-    border-collapse: collapse;
+    text-align: center;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.btn-blue {
+    background-color: #007bff;
+}
+
+.btn-green {
+    background-color: #28a745;
+}
+
+.form-container {
     margin-top: 20px;
 }
 
-.table th, .table td {
-    border: 1px solid #ddd;
+.form-input {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.ok {
+    color: green;
     padding: 10px;
 }
 
-.table th {
-    background: #efefef;
+.error {
+    color: red;
+    padding: 10px;
 }
 
-/* =============================
-   デバッグログ
-============================= */
-
 .debug {
+    margin-top: 20px;
     font-size: 12px;
-    color: #555;
-    margin-top: 40px;
-    white-space: pre-wrap;
+    color: #777;
 }
