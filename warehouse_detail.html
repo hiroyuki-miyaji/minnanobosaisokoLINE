@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>倉庫詳細</title>
+    <title>防災倉庫 詳細</title>
 
     <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    <!-- LIFF 共通ロジック -->
+    <!-- 共通ロジック -->
     <script type="module" src="./js/liff.js?v=2001"></script>
 
-    <!-- API 共通 -->
+    <!-- API -->
     <script src="./js/api.js?v=2001"></script>
 
-    <!-- 共通スタイル -->
+    <!-- CSS -->
     <link rel="stylesheet" href="./css/style.css?v=2001">
 </head>
 
 <body>
 
-<h2>倉庫詳細</h2>
+<h2>防災倉庫 詳細</h2>
 
 <div id="status">読み込み中...</div>
 
@@ -32,12 +32,13 @@
 import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
 
 let lineId = null;
-let warehouseNumber = null;
+let warehouseId = null;
 
 /* ----------------------------------------
    初期化
 ----------------------------------------- */
 async function main() {
+    debug("=== warehouse_detail start ===");
 
     const ok = await initLiff();
     if (!ok) {
@@ -46,16 +47,18 @@ async function main() {
         return;
     }
 
+    // LINEプロフィール
     const profile = await getUserProfile();
     lineId = profile.userId;
 
-    // パラメータ取得
+    // URLから「ナンバー」を取得
     const params = new URLSearchParams(location.search);
-    warehouseNumber = params.get("id");
+    warehouseId = params.get("id");  // ← ナンバーを受け取る
+    debug("warehouseId (number): " + warehouseId);
 
-    if (!warehouseNumber) {
+    if (!warehouseId) {
         document.getElementById("status").innerHTML =
-            "<p class='error'>倉庫ナンバーが指定されていません</p>";
+            "<p class='error'>倉庫番号が指定されていません。</p>";
         return;
     }
 
@@ -63,100 +66,90 @@ async function main() {
 }
 
 /* ----------------------------------------
-   倉庫詳細読み込み
+   倉庫詳細のロード
 ----------------------------------------- */
 async function loadDetail() {
 
-    const res = await getWarehouseDetail(lineId, warehouseNumber);
+    debug("call getWarehouseDetail()");
+    const res = await getWarehouseDetail({ LINEID: lineId, warehouseId });
+
+    debug("response: " + JSON.stringify(res));
 
     if (res.result !== "success") {
         document.getElementById("status").innerHTML =
-            "<p class='error'>詳細の取得に失敗しました。</p>";
+            "<p class='error'>倉庫情報の取得に失敗しました。</p>";
         return;
     }
 
     const w = res.item;
-    if (!w) {
-        document.getElementById("status").innerHTML =
-            "<p class='error'>該当する倉庫がありません。</p>";
-        return;
-    }
 
-    document.getElementById("status").innerHTML = `
-        <div class="status-sub">
-            倉庫ナンバー：${warehouseNumber}
-        </div>
-    `;
+    document.getElementById("status").innerHTML = "";
 
     const area = document.getElementById("detailArea");
     area.innerHTML = `
         <div class="warehouse-card">
 
-            <div class="warehouse-title">${warehouseNumber}</div>
+            <div class="warehouse-title">${w.warehouseId}</div>
 
-            <div class="warehouse-field">
-                <strong>倉庫名：</strong> ${w.name ?? ""}
-            </div>
+            <div class="warehouse-field"><strong>倉庫名：</strong>${w.name}</div>
+            <div class="warehouse-field"><strong>住所：</strong>${w.address}</div>
+            <div class="warehouse-field"><strong>サポーター企業：</strong>${w.supporter}</div>
+            <div class="warehouse-field"><strong>備蓄品：</strong>${w.stock}</div>
 
-            <div class="warehouse-field">
-                <strong>住所：</strong> ${w.address ?? ""}
-            </div>
-
-            <div class="warehouse-field">
-                <strong>サポーター企業：</strong> ${w.supporter ?? ""}
-            </div>
-
-            <div class="warehouse-field">
-                <strong>備蓄品：</strong> ${w.stock ?? ""}
-            </div>
-
-            <hr style="margin:16px 0;">
+            <div style="margin-top: 18px;"></div>
 
             <button class="btn btn-green" id="btnUnlockNotify">
-                🔔 通知して解錠
+                🔓 通知して解錠
             </button>
 
-            <button class="btn btn-green" id="btnUnlockSilent">
-                🔓 静かに解錠
+            <button class="btn btn-blue" id="btnUnlockSilent">
+                🔓 通知なしで解錠
             </button>
 
             <button class="btn btn-red" id="btnLock">
-                🔐 施錠する
+                🔒 施錠する
             </button>
 
-            <a class="btn btn-blue" style="margin-top:12px;"
-               href="./editWarehouse.html?id=${encodeURIComponent(warehouseNumber)}">
-               情報を編集する
-            </a>
         </div>
     `;
 
-    // --- 操作イベント ---
-    document.getElementById("btnUnlockNotify").onclick = () => doOperation("notify");
-    document.getElementById("btnUnlockSilent").onclick = () => doOperation("silent");
-    document.getElementById("btnLock").onclick = () => doOperation("lock");
+    // ボタンイベント
+    document.getElementById("btnUnlockNotify").addEventListener("click", () => {
+        operate("unlock_notify");
+    });
+
+    document.getElementById("btnUnlockSilent").addEventListener("click", () => {
+        operate("unlock_silent");
+    });
+
+    document.getElementById("btnLock").addEventListener("click", () => {
+        operate("lock");
+    });
 }
 
 /* ----------------------------------------
-   操作コール
+   操作（解錠 / 施錠）
 ----------------------------------------- */
-async function doOperation(mode) {
+async function operate(mode) {
 
-    let msg = "";
-    if (mode === "notify") msg = "通知して解錠します。よろしいですか？";
-    if (mode === "silent") msg = "静かに解錠します。よろしいですか？";
-    if (mode === "lock") msg = "施錠します。よろしいですか？";
+    let msg =
+        mode === "unlock_notify" ? "通知して解錠します。よろしいですか？" :
+        mode === "unlock_silent" ? "通知なしで解錠します。よろしいですか？" :
+        "倉庫を施錠します。よろしいですか？";
 
     if (!confirm(msg)) return;
 
-    const res = await operateWarehouse(lineId, warehouseNumber, mode);
+    const res = await operateWarehouse({
+        LINEID: lineId,
+        warehouseId,
+        mode
+    });
 
     if (res.result === "success") {
         alert("操作が完了しました！");
-        return;
+    } else {
+        alert("操作に失敗しました。");
     }
-
-    alert("操作に失敗しました。");
 }
 
 main();
