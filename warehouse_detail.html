@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倉庫詳細</title>
+
+    <!-- LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <!-- 共通ロジック -->
+    <script type="module" src="./js/liff.js?v=2001"></script>
+
+    <!-- API 共通 -->
+    <script src="./js/api.js?v=2001"></script>
+
+    <!-- 共通スタイル -->
+    <link rel="stylesheet" href="./css/style.css?v=2001">
+</head>
+
+<body>
+
+<h2>防災倉庫 詳細</h2>
+
+<div id="status">読み込み中...</div>
+
+<div id="detailArea" class="form-container"></div>
+
+<div id="debugArea" class="debug"></div>
+
+<script type="module">
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
+
+let lineId = null;
+
+/* ----------------------------------------
+   初期化
+----------------------------------------- */
+async function main() {
+    debug("=== warehouse_detail.html start ===");
+
+    const ok = await initLiff();
+    if (!ok) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>LIFF 初期化に失敗しました</p>";
+        return;
+    }
+
+    const profile = await getUserProfile();
+    lineId = profile.userId;
+
+    loadDetail();
+}
+
+/* ----------------------------------------
+   詳細ロード
+----------------------------------------- */
+async function loadDetail() {
+
+    const params = new URLSearchParams(location.search);
+    const warehouseId = params.get("id");
+
+    if (!warehouseId) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>ID が指定されていません。</p>";
+        return;
+    }
+
+    debug("call getWarehouseDetail(): " + warehouseId);
+
+    const res = await getWarehouseDetail(warehouseId);
+    debug("response: " + JSON.stringify(res));
+
+    if (res.result !== "success") {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>倉庫情報の取得に失敗しました。</p>";
+        return;
+    }
+
+    const w = res.item;
+
+    document.getElementById("status").innerHTML = "";
+
+    const area = document.getElementById("detailArea");
+
+    area.innerHTML = `
+        <div class="warehouse-card">
+
+            <div class="warehouse-title">${w.warehouseId}</div>
+
+            <div class="warehouse-field">
+                <strong>倉庫名：</strong> ${w.warehouseName ?? ""}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>住所：</strong> ${w.warehouseAddress ?? ""}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>公開：</strong> ${w.publish}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>通知：</strong> ${w.notify}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>拠点詳細：</strong><br>
+                ${w.detail ?? ""}
+            </div>
+
+        </div>
+
+        <a href="./list.html" class="btn btn-blue" style="margin-top:16px;">
+            一覧へ戻る
+        </a>
+    `;
+}
+
+main();
+</script>
+
+<style>
+/* 詳細ページ用のスタイル（一覧と統一感を出す） */
+
+.warehouse-card {
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.12);
+}
+
+.warehouse-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.warehouse-field {
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+</style>
+
+</body>
+</html>
