@@ -106,7 +106,7 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
     }
 
     document.getElementById("msgArea").innerHTML =
-        "<p class='error'>登録に失敗しました。</p>";
+        `<p class='error'>${res.message ?? "登録に失敗しました。"}</p>`;
 });
 </script>
 
