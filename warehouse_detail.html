@@ -8,7 +8,7 @@
     <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    <!-- 共通ロジック -->
+    <!-- LIFF 共通ロジック -->
     <script type="module" src="./js/liff.js?v=2001"></script>
 
     <!-- API 共通 -->
@@ -21,6 +21,7 @@
 <body>
 
 <h2>倉庫詳細</h2>
+
 <div id="status">読み込み中...</div>
 
 <div id="detailArea" class="form-container"></div>
@@ -31,13 +32,12 @@
 import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
 
 let lineId = null;
-let warehouseId = null;
+let warehouseNumber = null;
 
-/* -------------------------------
+/* ----------------------------------------
    初期化
-------------------------------- */
+----------------------------------------- */
 async function main() {
-    debug("=== warehouse_detail start ===");
 
     const ok = await initLiff();
     if (!ok) {
@@ -49,26 +49,25 @@ async function main() {
     const profile = await getUserProfile();
     lineId = profile.userId;
 
-    // URL パラメータから warehouseId を取得
-    const params = new URLSearchParams(window.location.search);
-    warehouseId = params.get("id");
+    // パラメータ取得
+    const params = new URLSearchParams(location.search);
+    warehouseNumber = params.get("id");
 
-    if (!warehouseId) {
+    if (!warehouseNumber) {
         document.getElementById("status").innerHTML =
-            "<p class='error'>倉庫IDが不明です</p>";
+            "<p class='error'>倉庫ナンバーが指定されていません</p>";
         return;
     }
 
-    await loadDetail();
+    loadDetail();
 }
 
-/* -------------------------------
-   倉庫詳細の読み込み
-------------------------------- */
+/* ----------------------------------------
+   倉庫詳細読み込み
+----------------------------------------- */
 async function loadDetail() {
 
-    const res = await getWarehouseDetail(lineId, warehouseId);
-    debug("detail response: " + JSON.stringify(res));
+    const res = await getWarehouseDetail(lineId, warehouseNumber);
 
     if (res.result !== "success") {
         document.getElementById("status").innerHTML =
@@ -77,144 +76,91 @@ async function loadDetail() {
     }
 
     const w = res.item;
+    if (!w) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>該当する倉庫がありません。</p>";
+        return;
+    }
 
-    document.getElementById("status").innerHTML =
-        `<div class="status-sub">${w.warehouseId}</div>`;
+    document.getElementById("status").innerHTML = `
+        <div class="status-sub">
+            倉庫ナンバー：${warehouseNumber}
+        </div>
+    `;
 
     const area = document.getElementById("detailArea");
     area.innerHTML = `
         <div class="warehouse-card">
-            <div class="warehouse-title">${w.warehouseId}</div>
+
+            <div class="warehouse-title">${warehouseNumber}</div>
 
             <div class="warehouse-field">
-                <strong>倉庫名：</strong> ${w.warehouseName ?? ""}
+                <strong>倉庫名：</strong> ${w.name ?? ""}
             </div>
 
             <div class="warehouse-field">
-                <strong>住所：</strong> ${w.warehouseAddress ?? ""}
+                <strong>住所：</strong> ${w.address ?? ""}
             </div>
 
             <div class="warehouse-field">
-                <strong>公開：</strong> ${w.publish}
+                <strong>サポーター企業：</strong> ${w.supporter ?? ""}
             </div>
 
             <div class="warehouse-field">
-                <strong>通知：</strong> ${w.notify}
+                <strong>備蓄品：</strong> ${w.stock ?? ""}
             </div>
 
-            <!-- 🔧 編集ページ -->
-            <a href="./editWarehouse.html?id=${encodeURIComponent(w.warehouseId)}"
-                class="btn btn-blue"
-                style="margin-top:12px;">
-                情報を編集する
+            <hr style="margin:16px 0;">
+
+            <button class="btn btn-green" id="btnUnlockNotify">
+                🔔 通知して解錠
+            </button>
+
+            <button class="btn btn-green" id="btnUnlockSilent">
+                🔓 静かに解錠
+            </button>
+
+            <button class="btn btn-red" id="btnLock">
+                🔐 施錠する
+            </button>
+
+            <a class="btn btn-blue" style="margin-top:12px;"
+               href="./editWarehouse.html?id=${encodeURIComponent(warehouseNumber)}">
+               情報を編集する
             </a>
-
-            <!-- 🔓 通知して解錠 -->
-            <button id="btnNotifyUnlock" class="btn btn-green" style="margin-top:10px;">
-                📢 通知して解錠（LINE）
-            </button>
-
-            <!-- 🔓 非通知解錠 -->
-            <button id="btnSilentUnlock" class="btn btn-blue" style="margin-top:10px;">
-                🔓 非通知で解錠（管理者のみ）
-            </button>
-
-            <!-- 🔒 施錠 -->
-            <button id="btnLock" class="btn btn-red" style="margin-top:10px;">
-                🔒 施錠
-            </button>
         </div>
     `;
 
-    /* -------------------------------
-       ボタンイベント
-    ------------------------------- */
-
-    // 通知して解錠
-    document.getElementById("btnNotifyUnlock").onclick = function () {
-        if (!confirm("📢 通知して解錠しますか？\n利用者に通知が送信されます。")) return;
-        unlockWarehouse("notify");
-    };
-
-    // 非通知解錠
-    document.getElementById("btnSilentUnlock").onclick = function () {
-        if (!confirm("🔓 通知せずに解錠しますか？\n管理者のみの操作となります。")) return;
-        unlockWarehouse("silent");
-    };
-
-    // 施錠
-    document.getElementById("btnLock").onclick = function () {
-        if (!confirm("🔒 施錠しますか？")) return;
-        lockWarehouse();
-    };
-
-    debug("=== warehouse_detail end ===");
+    // --- 操作イベント ---
+    document.getElementById("btnUnlockNotify").onclick = () => doOperation("notify");
+    document.getElementById("btnUnlockSilent").onclick = () => doOperation("silent");
+    document.getElementById("btnLock").onclick = () => doOperation("lock");
 }
 
-/* -------------------------------
-   解錠処理（通知 / 非通知）
-------------------------------- */
-async function unlockWarehouse(mode) {
-    const payload = {
-        LINEID: lineId,
-        warehouseId: warehouseId,
-        mode: mode,  // notify / silent
-        action: "unlock"
-    };
+/* ----------------------------------------
+   操作コール
+----------------------------------------- */
+async function doOperation(mode) {
 
-    const res = await operateWarehouse(payload);
-    console.log(res);
+    let msg = "";
+    if (mode === "notify") msg = "通知して解錠します。よろしいですか？";
+    if (mode === "silent") msg = "静かに解錠します。よろしいですか？";
+    if (mode === "lock") msg = "施錠します。よろしいですか？";
 
-    if (res.result === "success") {
-        alert("解錠しました！");
-    } else {
-        alert("解錠に失敗しました。");
-    }
-}
+    if (!confirm(msg)) return;
 
-/* -------------------------------
-   施錠処理
-------------------------------- */
-async function lockWarehouse() {
-    const payload = {
-        LINEID: lineId,
-        warehouseId: warehouseId,
-        action: "lock"
-    };
-
-    const res = await operateWarehouse(payload);
+    const res = await operateWarehouse(lineId, warehouseNumber, mode);
 
     if (res.result === "success") {
-        alert("施錠しました！");
-    } else {
-        alert("施錠に失敗しました。");
+        alert("操作が完了しました！");
+        return;
     }
+
+    alert("操作に失敗しました。");
 }
 
 main();
 </script>
-
-<style>
-/* 詳細カード */
-.warehouse-card {
-    background: #ffffff;
-    padding: 18px;
-    border-radius: 14px;
-    margin-bottom: 20px;
-    box-shadow: 0px 3px 8px rgba(0,0,0,0.12);
-}
-
-.warehouse-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 12px;
-}
-
-.warehouse-field {
-    font-size: 15px;
-    margin-bottom: 8px;
-}
-</style>
 
 </body>
 </html>
