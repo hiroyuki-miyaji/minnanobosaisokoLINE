@@ -13,6 +13,9 @@
     <!-- LIFF SDK（正しいパス） -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
+    <!-- 共通ロジック -->
+    <script type="module" src="./js/liff.js?v=2001"></script>
+
     <!-- API -->
     <script src="./js/api.js?v=2001"></script>
 
@@ -30,49 +33,52 @@
 <!-- デバッグログ -->
 <div id="debugArea" class="debug"></div>
 
-<script>
-function debug(msg){
-    console.log(msg);
-    document.getElementById("debugArea").innerHTML += msg + "<br>";
-}
-
-async function initLiff() {
-    try {
-        await liff.init({ liffId: "2008561144-5WLWMVPP" });
-
-        if (!liff.isLoggedIn()) {
-            liff.login();
-            return false;
-        }
-        return true;
-    } catch (e) {
-        debug("LIFF init error: " + e);
-        return false;
-    }
-}
+<script type="module">
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
 
 async function main() {
     debug("=== index start ===");
 
+    // ----------------------------------------
+    // LIFF 初期化
+    // ----------------------------------------
     const ok = await initLiff();
-    if (!ok) return;
+    if (!ok) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>LIFF 初期化に失敗しました</p>";
+        return;
+    }
 
-    let profile = await liff.getProfile();
+    // ----------------------------------------
+    // プロフィール取得
+    // ----------------------------------------
+    let profile;
+    try {
+        profile = await getUserProfile();
+    } catch (e) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>プロフィール取得に失敗しました</p>";
+        return;
+    }
+
     const lineId = profile.userId;
-
     debug("LINE Profile OK: " + profile.displayName);
 
-    // ------- getAdmin 実行 -------
+    // ----------------------------------------
+    // 管理者情報取得
+    // ----------------------------------------
     const admin = await getAdmin(lineId);
     debug("getAdmin response: " + JSON.stringify(admin));
 
     const status = document.getElementById("status");
-    const menu = document.getElementById("menuArea");
+    const menu   = document.getElementById("menuArea");
 
     const items = admin?.items ?? [];
     const isRegistered = items.length > 0;
 
-    // ====== 未登録 ======
+    // ----------------------------------------
+    // 未登録
+    // ----------------------------------------
     if (!isRegistered) {
         status.innerHTML = `
             <div class="status-name">${profile.displayName} さん</div>
@@ -87,7 +93,9 @@ async function main() {
         return;
     }
 
-    // ====== 登録済み ======
+    // ----------------------------------------
+    // 登録済み
+    // ----------------------------------------
     const adminInfo = items[0];
 
     status.innerHTML = `
@@ -100,6 +108,8 @@ async function main() {
         <a class="btn btn-blue" href="./register_warehouse.html">防災倉庫を追加登録</a>
         <a class="btn btn-blue" href="./register_admin.html">管理者情報を変更</a>
     `;
+
+    debug("=== index end ===");
 }
 
 main();
