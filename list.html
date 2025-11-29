@@ -95,9 +95,11 @@ async function loadList() {
        カード描画
     ----------------------------------------- */
     items.forEach(w => {
-
+        // 緊急状態（公開 = 公開中 ＆ 通知 = 通知）かどうか
+        const isEmergency = (w.publish === "公開中");
+        
         const div = document.createElement("div");
-        div.className = "warehouse-card";
+        div.className = "warehouse-card"  + (isEmergency ? "emergency-card" : "");
 
         div.innerHTML = `
             <div class="warehouse-title">${w.number}</div>
