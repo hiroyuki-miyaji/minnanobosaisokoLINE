@@ -34,6 +34,8 @@
 let lineId = null;
 
 async function init() {
+
+    // --- LIFF 初期化 ---
     await liff.init({ liffId: "2008561144-5WLWMVPP" });
 
     if (!liff.isLoggedIn()) {
@@ -43,6 +45,20 @@ async function init() {
 
     const profile = await liff.getProfile();
     lineId = profile.userId;
+
+    // --- 既存の管理者情報を取得 ---
+    const res = await getAdmin(lineId);
+
+    console.log("getAdmin response:", res);
+
+    if (res.result === "success" && Array.isArray(res.items) && res.items.length > 0) {
+        const admin = res.items[0];
+
+        // 既存情報をフォームにセット
+        document.getElementById("name").value = admin.name ?? "";
+        document.getElementById("email").value = admin.email ?? "";
+        document.getElementById("org").value = admin.organization ?? "";
+    }
 }
 
 document.getElementById("btnSubmit").addEventListener("click", async () => {
@@ -68,6 +84,7 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
         "<p class='error'>登録に失敗しました。</p>";
 });
 
+// initialize
 init();
 </script>
 </body>
