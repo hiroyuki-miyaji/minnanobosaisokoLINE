@@ -27,7 +27,6 @@ async function callApi(body) {
     }
 
     let json = null;
-
     try {
         json = await res.json();
     } catch (e) {
@@ -37,23 +36,37 @@ async function callApi(body) {
 
     console.log("▼ API Response:", json);
 
-    // ===== 正常応答(result = success) =====
-    if (res.ok && json?.result === "success") {
-        return json;
-    }
-
-    // ===== LogicApps の error 応答 =====
+    // ----------------------------
+    // LogicApps が "error" を返した場合
+    // ----------------------------
     if (json?.result === "error") {
         return json;
     }
 
-    // ===== HTTPエラー =====
+    // ----------------------------
+    // 正常応答
+    // ----------------------------
+    if (res.ok && json?.result === "success") {
+        return json;
+    }
+
+    // ----------------------------
+    // res.ok=false だが JSON は success の場合（異常ケース保険）
+    // ----------------------------
+    if (json?.result) {
+        return json;
+    }
+
+    // ----------------------------
+    // その他（HTTPエラー）
+    // ----------------------------
     return {
         result: "error",
         message: "http_error",
         status: res.status
     };
 }
+
 
 
 // ========================================
