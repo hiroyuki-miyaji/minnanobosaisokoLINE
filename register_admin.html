@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理者情報登録</title>
 
+    <!-- ui用のjs -->
+    <link rel="stylesheet" href="./css/ui.css?v=1">
+    
     <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -39,6 +42,10 @@
 <div id="debugArea" class="debug"></div>
 
 <script type="module">
+import { renderHeader, renderFooter } from "./js/ui.js?v=1";
+renderHeader("みんなの防災倉庫管理");
+renderFooter();
+
 import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
 
 let lineId = null;
