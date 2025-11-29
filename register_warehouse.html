@@ -63,7 +63,7 @@ async function main() {
 
     // 管理者登録確認
     const admin = await getAdmin(lineId);
-    debug("getAdmin: " + JSON.stringify(admin));
+    debug("getAdmin:OK");
 
     if (!admin.items || admin.items.length === 0) {
         document.getElementById("status").innerHTML =
