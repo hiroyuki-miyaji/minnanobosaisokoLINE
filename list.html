@@ -74,8 +74,12 @@ async function loadList() {
         return;
     }
 
-    document.getElementById("status").innerHTML =
-        "<div class='status-sub'>登録件数：" + items.length + " 件</div>";
+    // 件数表示（テンプレート文字列に修正済）
+    document.getElementById("status").innerHTML = `
+        <div class="status-sub">
+            登録件数：${items.length} 件
+        </div>
+    `;
 
     const area = document.getElementById("listArea");
     area.innerHTML = "";
@@ -144,7 +148,6 @@ main();
     font-size: 14px;
     margin-bottom: 6px;
 }
-
 </style>
 
 </body>
