@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理者情報登録</title>
 
+    <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <!-- 共通 LIFF ロジック -->
+    <script type="module" src="./js/liff.js?v=2001"></script>
+
+    <!-- API -->
     <script src="./js/api.js?v=2001"></script>
+
     <link rel="stylesheet" href="./css/style.css?v=2001">
 </head>
 
@@ -29,40 +36,43 @@
 </div>
 
 <div id="msgArea"></div>
+<div id="debugArea" class="debug"></div>
 
-<script>
+<script type="module">
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
+
 let lineId = null;
 
-async function init() {
+async function main() {
+    debug("=== register_admin start ===");
 
     // --- LIFF 初期化 ---
-    await liff.init({ liffId: "2008561144-5WLWMVPP" });
+    const ok = await initLiff();
+    if (!ok) return;
 
-    if (!liff.isLoggedIn()) {
-        liff.login();
-        return;
-    }
-
-    const profile = await liff.getProfile();
+    const profile = await getUserProfile();
     lineId = profile.userId;
 
-    // --- 既存の管理者情報を取得 ---
+    debug("LINE Profile OK: " + lineId);
+
+    // --- 管理者情報取得 ---
     const res = await getAdmin(lineId);
+    debug("getAdmin: " + JSON.stringify(res));
 
-    console.log("getAdmin response:", res);
+    if (res.result === "success" &&
+        Array.isArray(res.items) &&
+        res.items.length > 0) {
 
-    if (res.result === "success" && Array.isArray(res.items) && res.items.length > 0) {
         const admin = res.items[0];
 
-        // 既存情報をフォームにセット
-        document.getElementById("name").value = admin.name ?? "";
+        document.getElementById("name").value  = admin.name ?? "";
         document.getElementById("email").value = admin.email ?? "";
-        document.getElementById("org").value = admin.organization ?? "";
+        document.getElementById("org").value   = admin.organization ?? "";
     }
 }
 
+// ---- 登録処理 ----
 document.getElementById("btnSubmit").addEventListener("click", async () => {
-
     const payload = {
         LINEID: lineId,
         name: document.getElementById("name").value,
@@ -70,12 +80,14 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
         organization: document.getElementById("org").value
     };
 
+    debug("registerAdmin payload: " + JSON.stringify(payload));
+
     const res = await registerAdmin(payload);
+    debug("registerAdmin result: " + JSON.stringify(res));
 
     if (res.result === "success") {
         document.getElementById("msgArea").innerHTML =
             "<p class='ok'>登録が完了しました。戻ります...</p>";
-
         setTimeout(() => location.href = "./index.html", 1200);
         return;
     }
@@ -84,8 +96,8 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
         "<p class='error'>登録に失敗しました。</p>";
 });
 
-// initialize
-init();
+main();
 </script>
+
 </body>
 </html>
