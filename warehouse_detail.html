@@ -81,7 +81,7 @@ async function loadDetail() {
     debug("call getWarehouseDetail()");
     const res = await getWarehouseDetail({ LINEID: lineId, number });
 
-    debug("response: " + JSON.stringify(res));
+    debug("response:OK");
 
     if (res.result !== "success") {
         document.getElementById("status").innerHTML =
