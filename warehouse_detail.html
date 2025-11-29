@@ -114,7 +114,14 @@ async function loadDetail() {
             <div class="warehouse-field"><strong>公開：</strong>${w.publish}</div>
             <div class="warehouse-field"><strong>通知：</strong>${w.notify}</div>
             <div class="warehouse-field"><strong>登録者数：</strong>${w.registerNumber}</div>
-
+            
+            <!-- 編集画面へ遷移するボタン（基本情報の直下） -->
+            <a href="./edit_warehouse.html?id=${w.number}"
+               class="btn btn-gray"
+               style="margin-top:16px; margin-bottom:20px; display:block; text-align:center;">
+                ✏️ 編集する
+            </a>
+            
             <div style="margin-top: 18px;"></div>
 
             <button class="btn btn-red" id="btnUnlockNotify">
