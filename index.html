@@ -3,23 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>みんなの防災倉庫 管理者用アプリ</title>
+    <title>みんなの防災倉庫 管理アプリ</title>
 
     <!-- キャッシュ無効化 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <!-- LIFF SDK -->
+    <!-- LIFF SDK（正しいパス） -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    <!-- 共通 API -->
-    <script src="./js/api.js?v=1005"></script>
+    <!-- API -->
+    <script src="./js/api.js?v=2001"></script>
 
-    <!-- 共通 LIFF ロジック -->
-    <script type="module" src="./js/liff.js?v=1005"></script>
-
-    <link rel="stylesheet" href="./css/style.css?v=1005">
+    <link rel="stylesheet" href="./css/style.css?v=2001">
 </head>
 
 <body>
@@ -27,101 +24,75 @@
 <h2>みんなの防災倉庫 管理アプリ</h2>
 <div id="status">LIFF 初期化中...</div>
 
+<!-- メニュー -->
 <div id="menuArea"></div>
 
+<!-- デバッグログ -->
 <div id="debugArea" class="debug"></div>
 
-<script type="module">
-import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1005";
+<script>
+function debug(msg){
+    console.log(msg);
+    document.getElementById("debugArea").innerHTML += msg + "<br>";
+}
+
+async function initLiff() {
+    try {
+        await liff.init({ liffId: "2008561144-5WLWMVPP" });
+
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            return false;
+        }
+        return true;
+    } catch (e) {
+        debug("LIFF init error: " + e);
+        return false;
+    }
+}
 
 async function main() {
-    debug("=== index.html start ===");
+    debug("=== index start ===");
 
-    // ========= 1. LIFF 初期化 =========
     const ok = await initLiff();
-    if (!ok) {
-        document.getElementById("status").innerText = "LIFF 初期化失敗";
-        return;
-    }
+    if (!ok) return;
 
-    // ========= 2. LINE プロフィール =========
-    let profile;
-    try {
-        profile = await getUserProfile();
-    } catch {
-        document.getElementById("status").innerText = "プロフィール取得に失敗しました";
-        return;
-    }
+    let profile = await liff.getProfile();
     const lineId = profile.userId;
 
-    const menu = document.getElementById("menuArea");
-    const status = document.getElementById("status");
+    debug("LINE Profile OK: " + profile.displayName);
 
-    // ========= 3. register_admin.html からの戻り確認 =========
-    const params = new URLSearchParams(location.search);
-    const adminJson = params.get("admin");
-
-    if (adminJson) {
-        debug("admin from query: " + adminJson);
-
-        let adminInfo;
-        try {
-            adminInfo = JSON.parse(adminJson);
-        } catch {
-            debug("JSON parse error");
-            return;
-        }
-
-        drawRegisteredMenu(adminInfo);
-        debug("=== index.html end (from register_admin) ===");
-        return;
-    }
-
-    // ========= 4. 初回アクセス → Dataverse getAdmin =========
-    debug("call getAdmin()");
+    // ------- getAdmin 実行 -------
     const admin = await getAdmin(lineId);
-    debug("getAdmin result: " + JSON.stringify(admin));
+    debug("getAdmin response: " + JSON.stringify(admin));
 
-    const hasRecord =
-        admin &&
-        admin.items &&
-        Array.isArray(admin.items) &&
-        admin.items.length > 0;
+    const status = document.getElementById("status");
+    const menu = document.getElementById("menuArea");
 
-    if (!hasRecord) {
-        // 未登録
+    const items = admin?.items ?? [];
+    const isRegistered = items.length > 0;
+
+    // ====== 未登録 ======
+    if (!isRegistered) {
         status.innerHTML = `
-            <div style="font-size:20px; font-weight:bold;">
-                ${profile.displayName} さん<br>
-                利用には管理者登録が必要です
-            </div>
+            <div class="status-name">${profile.displayName} さん</div>
+            <div class="status-sub">利用には管理者登録が必要です</div>
         `;
+
         menu.innerHTML = `
             <a class="btn btn-green" href="./register_admin.html">
                 管理者情報を登録する
             </a>
         `;
-        debug("=== index.html end (not registered) ===");
         return;
     }
 
-    // 登録済
-    drawRegisteredMenu(admin.items[0]);
-    debug("=== index.html end (registered) ===");
-}
-
-// ========= 共通：登録済みメニュー描画関数 =========
-function drawRegisteredMenu(info) {
-    const status = document.getElementById("status");
-    const menu = document.getElementById("menuArea");
+    // ====== 登録済み ======
+    const adminInfo = items[0];
 
     status.innerHTML = `
-        <div style="font-size:20px; font-weight:bold;">
-            ${info.crfd1_name} さん（管理者）
-        </div>
-        <div style="font-size:14px; color:#444; margin-top:4px;">
-            ${info.crfd1_company ?? ""}
-        </div>
+        <div class="status-name">${adminInfo.name} さん（管理者）</div>
+        <div class="status-sub">${adminInfo.organization ?? ""}</div>
     `;
 
     menu.innerHTML = `
