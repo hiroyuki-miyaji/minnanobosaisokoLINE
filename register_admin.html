@@ -64,7 +64,7 @@ async function main() {
 
     // --- 管理者情報取得 ---
     const res = await getAdmin(lineId);
-    debug("getAdmin: " + JSON.stringify(res));
+    debug("getAdmin:OK");
 
     if (res.result === "success" &&
         Array.isArray(res.items) &&
@@ -87,10 +87,10 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
         organization: document.getElementById("org").value
     };
 
-    debug("registerAdmin payload: " + JSON.stringify(payload));
+    debug("registerAdmin payload proccessing");
 
     const res = await registerAdmin(payload);
-    debug("registerAdmin result: " + JSON.stringify(res));
+    debug("registerAdmin result:OK");
 
     if (res.result === "success") {
         document.getElementById("msgArea").innerHTML =
