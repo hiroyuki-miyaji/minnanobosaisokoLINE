@@ -99,7 +99,7 @@ async function loadList() {
         const isEmergency = (w.publish === "公開中");
         
         const div = document.createElement("div");
-        div.className = "warehouse-card"  + (isEmergency ? "emergency-card" : "");
+        div.className = "warehouse-card" + (isEmergency ? " emergency-card" : "");
 
         div.innerHTML = `
             <div class="warehouse-title">${w.number}</div>
@@ -135,29 +135,6 @@ async function loadList() {
 
 main();
 </script>
-
-<style>
-/* 一覧カード用スタイル（既存トーンに合わせる） */
-
-.warehouse-card {
-    background: #ffffff;
-    padding: 16px;
-    border-radius: 12px;
-    margin-bottom: 18px;
-    box-shadow: 0px 3px 8px rgba(0,0,0,0.12);
-}
-
-.warehouse-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.warehouse-field {
-    font-size: 14px;
-    margin-bottom: 6px;
-}
-</style>
 
 </body>
 </html>
