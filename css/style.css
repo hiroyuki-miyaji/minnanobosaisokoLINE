@@ -25,14 +25,16 @@ h2 {
 
 .btn {
     display: block;
-    width: 100%;
+    width: 85%;                 /* ← 中央寄せ用の幅（必要なら調整可能） */
+    max-width: 420px;           /* ← 大きすぎを防止 */
     text-align: center;
     padding: 15px;
-    margin: 10px 0;
-    border-radius: 8px;
+    margin: 12px auto;          /* ← ココが重要。左右 auto で中央寄せ */
+    border-radius: 10px;
     color: white;
     text-decoration: none;
     font-size: 18px;
+    font-weight: bold;
 }
 
 .btn-blue {
