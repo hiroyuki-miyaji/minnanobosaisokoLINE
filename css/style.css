@@ -98,3 +98,14 @@ h2 {
 .warehouse-field {
     font-size: 15px;
     margin-bottom: 6
+
+/* 緊急状態のカード背景（公開中 ＆ 通知 ON） */
+.emergency-card {
+    background: #ffebee !important;        /* 薄い赤 */
+    border-left: 6px solid #d32f2f;        /* 強調ライン */
+}
+
+.emergency-card .warehouse-title {
+    color: #b71c1c;
+}
+
