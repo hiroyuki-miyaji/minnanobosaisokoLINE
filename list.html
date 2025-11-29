@@ -65,7 +65,7 @@ async function loadList() {
 
     debug("call listWarehouses()");
     const res = await listWarehouses(lineId);
-    debug("response: " + JSON.stringify(res));
+    debug("response:OK");
 
     if (res.result !== "success") {
         document.getElementById("status").innerHTML =
