@@ -1,119 +1,160 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>倉庫情報の編集</title>
-<link rel="stylesheet" href="./css/style.css">
-<script src="https://static.line-scdn.net/liff/2.22.1/sdk.js"></script>
-<script src="./js/liff.js"></script>
-<script src="./js/api.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>防災倉庫 編集</title>
+
+    <!-- 共通UI -->
+    <link rel="stylesheet" href="./css/ui.css?v=1">
+
+    <!-- LIFF -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <!-- 共通ロジック -->
+    <script type="module" src="./js/liff.js?v=2001"></script>
+
+    <!-- API -->
+    <script src="./js/api.js?v=2001"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/style.css?v=2001">
 </head>
 
 <body>
-<h2>倉庫の管理</h2>
 
-<div id="loading">読み込み中...</div>
+<h2>防災倉庫 編集</h2>
 
-<div id="editArea" style="display:none;">
+<div id="status">読み込み中...</div>
 
-    <!-- 閲覧のみ -->
-    <div class="form-group">
-        <label>倉庫ナンバー</label>
-        <input id="number" type="text" disabled>
-    </div>
+<div id="editArea" class="form-container" style="display:none;"></div>
 
-    <div class="form-group">
-        <label>名称</label>
-        <input id="detail" type="text" disabled>
-    </div>
+<div id="msgArea"></div>
+<div id="debugArea" class="debug"></div>
 
-    <div class="form-group">
-        <label>住所</label>
-        <input id="address" type="text" disabled>
-    </div>
+<script type="module">
+import { renderHeader, renderFooter } from "./js/ui.js?v=1";
+renderHeader("みんなの防災倉庫管理");
+renderFooter();
 
-    <div class="form-group">
-        <label>画像URL</label>
-        <input id="imageurl" type="text" disabled>
-    </div>
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
 
-    <div class="form-group">
-        <label>サポーター企業URL</label>
-        <input id="supporterurl" type="text" disabled>
-    </div>
+let lineId = null;
+let number = null;
 
-    <!-- 管理者が編集可能 -->
-    <h3>編集可能な項目</h3>
+/* ----------------------------------------
+   初期化
+----------------------------------------- */
+async function main() {
+    debug("=== edit_warehouse start ===");
 
-    <div class="form-group">
-        <label>備蓄品情報</label>
-        <textarea id="stock" rows="3"></textarea>
-    </div>
+    const ok = await initLiff();
+    if (!ok) return;
 
-    <div class="form-group">
-        <label>暗証番号</label>
-        <input id="lockcode" type="text">
-    </div>
+    const profile = await getUserProfile();
+    lineId = profile.userId;
 
-    <h3>操作</h3>
-    <button id="btnUnlock" class="btn-primary">解錠（公開）</button>
-    <button id="btnLock" class="btn-warning">施錠（非公開）</button>
-
-    <button id="btnSave" class="btn-primary">保存</button>
-
-    <a href="./list.html" class="btn-secondary">一覧に戻る</a>
-</div>
-
-<script>
-const params = new URLSearchParams(location.search);
-const number = params.get("number");
-
-(async () => {
-    const lineId = await getLineId();
-    const detail = await getWarehouseDetail({ LINEID: lineId, number });
-
-    if (!detail) {
-        alert("倉庫情報が取得できませんでした");
-        location.href = "./list.html";
+    const params = new URLSearchParams(location.search);
+    number = params.get("id");
+    if (!number) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>倉庫番号が指定されていません。</p>";
         return;
     }
 
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("editArea").style.display = "block";
+    loadDetail();
+}
 
-    // 閲覧専用
-    document.getElementById("number").value = detail.number;
-    document.getElementById("detail").value = detail.detail || "";
-    document.getElementById("address").value = detail.address || "";
-    document.getElementById("imageurl").value = detail.imageurl || "";
-    document.getElementById("supporterurl").value = detail.supporterurl || "";
+/* ----------------------------------------
+   詳細ロード
+----------------------------------------- */
+async function loadDetail() {
 
-    // 編集可能
-    document.getElementById("stock").value = detail.stock || "";
-    document.getElementById("lockcode").value = detail.lockcode || "";
+    const res = await getWarehouseDetail({ LINEID: lineId, number });
 
-    document.getElementById("btnUnlock").onclick = async () => {
-        await operateWarehouse({ LINEID: lineId, number, mode: "unlock" });
-        alert("解錠しました");
+    if (res.result !== "success" || !res.items?.[0]) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>倉庫情報の取得に失敗しました。</p>";
+        return;
+    }
+
+    const w = res.items[0];
+
+    document.getElementById("status").innerHTML = "";
+    const area = document.getElementById("editArea");
+
+    area.innerHTML = `
+        <div class="warehouse-card">
+
+            <div class="warehouse-title">${w.number}</div>
+
+            <div class="warehouse-field">
+                <strong>名称：</strong>${w.name ?? ""}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>住所：</strong>${w.address ?? ""}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>サポーター企業：</strong>${w.supporter ?? ""}
+            </div>
+
+            <label>備蓄品（編集可）</label>
+            <textarea id="stocks" class="form-input" rows="3">${w.stocks ?? ""}</textarea>
+
+            <label>暗証番号（編集可）</label>
+            <input id="password" type="text" class="form-input"
+                   value="${w.password ?? ""}">
+
+            <button id="btnSave" class="btn btn-green" style="margin-top:16px;">
+                保存する
+            </button>
+
+            <a href="./warehouse_detail.html?id=${encodeURIComponent(w.number)}"
+               class="btn btn-blue" style="margin-top:10px;">
+                戻る
+            </a>
+        </div>
+    `;
+
+    area.style.display = "block";
+
+    document.getElementById("btnSave").addEventListener("click", save);
+}
+
+/* ----------------------------------------
+   保存処理
+----------------------------------------- */
+async function save() {
+
+    const payload = {
+        LINEID: lineId,
+        number,
+        stocks: document.getElementById("stocks").value,
+        password: document.getElementById("password").value
     };
 
-    document.getElementById("btnLock").onclick = async () => {
-        await operateWarehouse({ LINEID: lineId, number, mode: "lock" });
-        alert("施錠しました");
-    };
+    debug("update payload: " + JSON.stringify(payload));
 
-    document.getElementById("btnSave").onclick = async () => {
-        const data = {
-            LINEID: lineId,
-            number,
-            stock: document.getElementById("stock").value,
-            lockcode: document.getElementById("lockcode").value
-        };
-        await updateWarehouse(data);
-        alert("保存しました");
-    };
-})();
+    const res = await updateWarehouse(payload);
+
+    if (res.result === "success") {
+        document.getElementById("msgArea").innerHTML =
+            "<p class='ok'>更新が完了しました。</p>";
+
+        setTimeout(() => {
+            location.href = "./warehouse_detail.html?id=" + number;
+        }, 1500);
+
+        return;
+    }
+
+    document.getElementById("msgArea").innerHTML =
+        "<p class='error'>更新に失敗しました。</p>";
+}
+
+main();
 </script>
 
 </body>
