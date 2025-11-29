@@ -8,6 +8,9 @@
     <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
+    <!-- 共通ロジック -->
+    <script type="module" src="./js/liff.js?v=2001"></script>
+
     <!-- API 共通 -->
     <script src="./js/api.js?v=2001"></script>
 
@@ -22,34 +25,40 @@
 
 <div id="listArea" class="form-container"></div>
 
-<div id="msgArea"></div>
+<div id="debugArea" class="debug"></div>
 
-<script>
+<script type="module">
+import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
+
 let lineId = null;
 
-// ----------------------------------------
-// LIFF 初期化
-// ----------------------------------------
-async function init() {
-    await liff.init({ liffId: "2008561144-5WLWMVPP" });
+/* ----------------------------------------
+   初期化
+----------------------------------------- */
+async function main() {
+    debug("=== list.html start ===");
 
-    if (!liff.isLoggedIn()) {
-        liff.login();
+    const ok = await initLiff();
+    if (!ok) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>LIFF 初期化に失敗しました</p>";
         return;
     }
 
-    const profile = await liff.getProfile();
+    const profile = await getUserProfile();
     lineId = profile.userId;
 
     loadList();
 }
 
-// ----------------------------------------
-// 倉庫一覧のロード
-// ----------------------------------------
+/* ----------------------------------------
+   一覧ロード
+----------------------------------------- */
 async function loadList() {
 
+    debug("call listWarehouses()");
     const res = await listWarehouses(lineId);
+    debug("response: " + JSON.stringify(res));
 
     if (res.result !== "success") {
         document.getElementById("status").innerHTML =
@@ -69,12 +78,11 @@ async function loadList() {
         `登録件数：${items.length} 件`;
 
     const area = document.getElementById("listArea");
-    area.innerHTML = ""; // initialize
+    area.innerHTML = "";
 
-
-    // ----------------------------------------
-    // 一覧描画
-    // ----------------------------------------
+    /* ----------------------------------------
+       カード描画
+    ----------------------------------------- */
     items.forEach(w => {
 
         const div = document.createElement("div");
@@ -99,7 +107,7 @@ async function loadList() {
                 <strong>通知：</strong> ${w.notify}
             </div>
 
-            <a href="./warehouse_detail.html?id=${w.warehouseId}"
+            <a href="./warehouse_detail.html?id=${encodeURIComponent(w.warehouseId)}"
                class="btn btn-blue"
                style="margin-top:12px;">
                 詳細を見る
@@ -108,18 +116,20 @@ async function loadList() {
 
         area.appendChild(div);
     });
+
+    debug("=== list.html end ===");
 }
 
-init();
+main();
 </script>
 
 <style>
-/* 追加の一覧カード用スタイル（style.css のトーンに合わせる） */
+/* 一覧カード用スタイル（既存トーンに合わせる） */
 
 .warehouse-card {
     background: #ffffff;
     padding: 16px;
-    border-radius: 10px;
+    border-radius: 12px;
     margin-bottom: 18px;
     box-shadow: 0px 3px 8px rgba(0,0,0,0.12);
 }
