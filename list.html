@@ -3,45 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>倉庫一覧</title>
+    <title>防災倉庫一覧</title>
 
     <!-- LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    <!-- API -->
-    <script src="./js/api.js?v=1001"></script>
+    <!-- API 共通 -->
+    <script src="./js/api.js?v=2001"></script>
 
-    <!-- LIFF ロジック -->
-    <script type="module" src="./js/liff.js?v=1001"></script>
-
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-    </style>
+    <!-- 共通スタイル -->
+    <link rel="stylesheet" href="./css/style.css?v=2001">
 </head>
 
 <body>
 
-<h2>倉庫一覧</h2>
+<h2>登録済み防災倉庫一覧</h2>
+<div id="status">読み込み中...</div>
 
-<!-- あなたが既に作ったUIをそのまま置く場所 -->
-<div id="warehouseList"></div>
+<div id="listArea" class="form-container"></div>
 
-<div id="debugArea" style="margin-top:30px;font-size:12px;color:#555;"></div>
+<div id="msgArea"></div>
 
-<script type="module">
-import { initLiff, debug } from "./js/liff.js?v=1001";
+<script>
+let lineId = null;
 
-async function main() {
-    const ok = await initLiff();
-    if (!ok) return;
+// ----------------------------------------
+// LIFF 初期化
+// ----------------------------------------
+async function init() {
+    await liff.init({ liffId: "2008561144-5WLWMVPP" });
 
-    debug("list.html: LIFF init OK");
+    if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+    }
 
-    // ←あなたが元々 list.html に書いていた処理をここに追加
-    // e.g. load warehouses / display table
+    const profile = await liff.getProfile();
+    lineId = profile.userId;
+
+    loadList();
 }
-main();
+
+// ----------------------------------------
+// 倉庫一覧のロード
+// ----------------------------------------
+async function loadList() {
+
+    const res = await listWarehouses(lineId);
+
+    if (res.result !== "success") {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>一覧の取得に失敗しました。</p>";
+        return;
+    }
+
+    const items = res.items;
+
+    if (!items || items.length === 0) {
+        document.getElementById("status").innerHTML =
+            "<p>登録されている防災倉庫はありません。</p>";
+        return;
+    }
+
+    document.getElementById("status").innerText =
+        `登録件数：${items.length} 件`;
+
+    const area = document.getElementById("listArea");
+    area.innerHTML = ""; // initialize
+
+
+    // ----------------------------------------
+    // 一覧描画
+    // ----------------------------------------
+    items.forEach(w => {
+
+        const div = document.createElement("div");
+        div.className = "warehouse-card";
+
+        div.innerHTML = `
+            <div class="warehouse-title">${w.warehouseId}</div>
+
+            <div class="warehouse-field">
+                <strong>倉庫名：</strong> ${w.warehouseName ?? ""}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>住所：</strong> ${w.warehouseAddress ?? ""}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>公開：</strong> ${w.publish}
+            </div>
+
+            <div class="warehouse-field">
+                <strong>通知：</strong> ${w.notify}
+            </div>
+
+            <a href="./warehouse_detail.html?id=${w.warehouseId}"
+               class="btn btn-blue"
+               style="margin-top:12px;">
+                詳細を見る
+            </a>
+        `;
+
+        area.appendChild(div);
+    });
+}
+
+init();
 </script>
+
+<style>
+/* 追加の一覧カード用スタイル（style.css のトーンに合わせる） */
+
+.warehouse-card {
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.12);
+}
+
+.warehouse-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.warehouse-field {
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+</style>
 
 </body>
 </html>
