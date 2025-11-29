@@ -3,67 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理者登録</title>
+    <title>管理者情報登録</title>
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="./js/api.js?v=1005"></script>
-    <script type="module" src="./js/liff.js?v=1005"></script>
-
-    <link rel="stylesheet" href="./css/style.css?v=1005">
+    <script src="./js/api.js?v=2001"></script>
+    <link rel="stylesheet" href="./css/style.css?v=2001">
 </head>
+
 <body>
 
 <h2>管理者情報登録</h2>
 
-<div id="formArea">
-    <label>氏名</label><br>
-    <input id="name" type="text"><br><br>
+<div class="form-container">
 
-    <label>メール</label><br>
-    <input id="email" type="email"><br><br>
+    <label>氏名</label>
+    <input id="name" class="form-input" type="text">
 
-    <label>所属名</label><br>
-    <input id="company" type="text"><br><br>
+    <label>メールアドレス</label>
+    <input id="email" class="form-input" type="email">
 
-    <button id="btn" class="btn btn-green">登録する</button>
+    <label>組織名（会社名）</label>
+    <input id="org" class="form-input" type="text">
+
+    <button class="btn btn-green" id="btnSubmit">登録する</button>
 </div>
 
-<div id="debugArea" class="debug"></div>
+<div id="msgArea"></div>
 
-<script type="module">
-import { initLiff, getUserProfile, debug } from "./js/liff.js?v=1005";
+<script>
+let lineId = null;
 
-async function main() {
-    await initLiff();
-    const profile = await getUserProfile();
-    const lineId = profile.userId;
+async function init() {
+    await liff.init({ liffId: "2008561144-5WLWMVPP" });
 
-    document.getElementById("btn").onclick = async () => {
-        const payload = {
-            LINEID: lineId,
-            name: document.getElementById("name").value,
-            email: document.getElementById("email").value,
-            organization: document.getElementById("company").value
-        };
+    if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+    }
 
-        debug("send registerAdmin: " + JSON.stringify(payload));
-
-        const result = await registerAdmin(payload);
-
-        debug("response: " + JSON.stringify(result));
-
-        if (result && result.admin) {
-            // admin 情報を index.html に渡す
-            const encoded = encodeURIComponent(JSON.stringify(result.admin));
-            location.href = `./index.html?admin=${encoded}`;
-        } else {
-            alert("登録に失敗しました");
-        }
-    };
+    const profile = await liff.getProfile();
+    lineId = profile.userId;
 }
 
-main();
-</script>
+document.getElementById("btnSubmit").addEventListener("click", async () => {
 
+    const payload = {
+        LINEID: lineId,
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        organization: document.getElementById("org").value
+    };
+
+    const res = await registerAdmin(payload);
+
+    if (res.result === "success") {
+        document.getElementById("msgArea").innerHTML =
+            "<p class='ok'>登録が完了しました。戻ります...</p>";
+
+        setTimeout(() => location.href = "./index.html", 1200);
+        return;
+    }
+
+    document.getElementById("msgArea").innerHTML =
+        "<p class='error'>登録に失敗しました。</p>";
+});
+
+init();
+</script>
 </body>
 </html>
