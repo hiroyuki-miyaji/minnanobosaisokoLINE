@@ -81,7 +81,14 @@ async function loadDetail() {
         return;
     }
 
-    const w = res.item;
+    // ← items[0] を取得
+    const w = res.items?.[0];
+
+    if (!w) {
+        document.getElementById("status").innerHTML =
+            "<p class='error'>該当する倉庫がありません。</p>";
+        return;
+    }
 
     document.getElementById("status").innerHTML = "";
 
@@ -94,12 +101,12 @@ async function loadDetail() {
             <div class="warehouse-field"><strong>防災倉庫名：</strong>${w.name}</div>
             <div class="warehouse-field"><strong>設置場所住所：</strong>${w.address}</div>
             <div class="warehouse-field"><strong>サポーター企業：</strong>${w.supporter}</div>
-            <div class="warehouse-field"><strong>備蓄品：</strong>${w.stock}</div>
+            <div class="warehouse-field"><strong>備蓄品：</strong>${w.stocks}</div>
 
             <div style="margin-top: 18px;"></div>
 
             <button class="btn btn-green" id="btnUnlockNotify">
-                🔓 通知して解錠
+                🔔🔓 通知して解錠
             </button>
 
             <button class="btn btn-blue" id="btnUnlockSilent">
@@ -126,6 +133,7 @@ async function loadDetail() {
         operate("lock");
     });
 }
+
 
 /* ----------------------------------------
    操作（解錠 / 施錠）
