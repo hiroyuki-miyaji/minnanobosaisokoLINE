@@ -81,31 +81,33 @@ h2 {
 /* ----------------------------------------
    カード表示（一覧・詳細）
 ----------------------------------------- */
+/* 📌 通常カード */
 .warehouse-card {
-    background: white;
-    padding: 18px;
-    border-radius: 14px;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-    margin-bottom: 16px;
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.12);
 }
 
+/* 📌 緊急カード（公開中） */
+.warehouse-card.emergency-card {
+    background: #ffebee !important; /* 薄い赤 */
+    border-left: 6px solid #d32f2f;
+}
+
+.warehouse-card.emergency-card .warehouse-title {
+    color: #b71c1c;
+}
+
+/* 📌 共通 */
 .warehouse-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     margin-bottom: 10px;
 }
 
 .warehouse-field {
-    font-size: 15px;
-    margin-bottom: 6
-
-/* 緊急状態のカード背景（公開中 ＆ 通知 ON） */
-.emergency-card {
-    background: #ffebee !important;        /* 薄い赤 */
-    border-left: 6px solid #d32f2f;        /* 強調ライン */
+    font-size: 14px;
+    margin-bottom: 6px;
 }
-
-.emergency-card .warehouse-title {
-    color: #b71c1c;
-}
-
