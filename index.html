@@ -10,6 +10,9 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
+    <!-- ui用のjs -->
+    <link rel="stylesheet" href="./css/ui.css?v=1">
+
     <!-- LIFF SDK（正しいパス） -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -34,6 +37,10 @@
 <div id="debugArea" class="debug"></div>
 
 <script type="module">
+import { renderHeader, renderFooter } from "./js/ui.js?v=1";
+renderHeader("みんなの防災倉庫管理");
+renderFooter();
+
 import { initLiff, getUserProfile, debug } from "./js/liff.js?v=2001";
 
 async function main() {
