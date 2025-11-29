@@ -23,7 +23,7 @@ async function callApi(body) {
         });
     } catch (e) {
         console.error("API fetch error:", e);
-        return { result: "error", message: "network_error", detail: e };
+        return { result: "error", message: "network_error" };
     }
 
     let json = null;
@@ -32,37 +32,35 @@ async function callApi(body) {
         json = await res.json();
     } catch (e) {
         console.error("JSON parse error:", e);
-        return { result: "error", message: "json_parse_error", detail: e };
+        return { result: "error", message: "json_parse_error" };
     }
 
     console.log("▼ API Response:", json);
 
-    // ✔ LogicApps が成功 → 200
+    // ===== 正常応答(result = success) =====
     if (res.ok && json?.result === "success") {
         return json;
     }
 
-    // ✔ LogicApps が返したエラー
+    // ===== LogicApps の error 応答 =====
     if (json?.result === "error") {
         return json;
     }
 
-    // ✔ HTTP エラー（想定外）
+    // ===== HTTPエラー =====
     return {
         result: "error",
         message: "http_error",
-        status: res.status,
-        detail: json
+        status: res.status
     };
 }
 
 
 // ========================================
-// API ラッパー関数群
-// （LIFF → LogicApps に送る payload を統一）
+// API ラッパー関数
 // ========================================
 
-// 管理者情報取得
+// 管理者取得
 async function getAdmin(lineId) {
     return await callApi({
         action: "getAdmin",
@@ -70,7 +68,7 @@ async function getAdmin(lineId) {
     });
 }
 
-// 管理者登録・更新
+// 管理者登録
 async function registerAdmin(data) {
     return await callApi({
         action: "registerAdmin",
@@ -78,7 +76,7 @@ async function registerAdmin(data) {
     });
 }
 
-// 倉庫一覧を取得
+// 倉庫一覧
 async function listWarehouses(lineId) {
     return await callApi({
         action: "listWarehouses",
@@ -86,7 +84,7 @@ async function listWarehouses(lineId) {
     });
 }
 
-// 倉庫詳細取得
+// 倉庫詳細
 async function getWarehouseDetail(data) {
     return await callApi({
         action: "getWarehouseDetail",
@@ -94,7 +92,7 @@ async function getWarehouseDetail(data) {
     });
 }
 
-// 倉庫紐づけ（管理者が追加）
+// 倉庫登録
 async function registerWarehouse(data) {
     return await callApi({
         action: "registerWarehouse",
@@ -102,7 +100,7 @@ async function registerWarehouse(data) {
     });
 }
 
-// 備蓄品・暗証番号 更新
+// 倉庫更新
 async function updateWarehouse(data) {
     return await callApi({
         action: "updateWarehouse",
@@ -110,7 +108,7 @@ async function updateWarehouse(data) {
     });
 }
 
-// 紐づけ解除
+// 紐付け解除
 async function deleteWarehouse(data) {
     return await callApi({
         action: "deleteWarehouse",
@@ -118,7 +116,7 @@ async function deleteWarehouse(data) {
     });
 }
 
-// 施錠 / 解錠
+// 操作(施錠/解錠)
 async function operateWarehouse(data) {
     return await callApi({
         action: "operateWarehouse",
