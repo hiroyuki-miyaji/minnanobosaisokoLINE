@@ -100,10 +100,10 @@ async function loadDetail() {
                 <strong>サポーター企業：</strong>${w.supporter ?? ""}
             </div>
 
-            <label>備蓄品（編集可）</label>
-            <textarea id="stocks" class="form-input" rows="3">${w.stocks ?? ""}</textarea>
+            <label>備蓄品</label>
+            <textarea id="stocks" class="form-input" rows="5">${w.stocks ?? ""}</textarea>
 
-            <label>暗証番号（編集可）</label>
+            <label>暗証番号</label>
             <input id="password" type="text" class="form-input"
                    value="${w.password ?? ""}">
 
