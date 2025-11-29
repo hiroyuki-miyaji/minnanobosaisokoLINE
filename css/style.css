@@ -1,40 +1,54 @@
+/* ================================
+   共通スタイル
+================================ */
 body {
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
     padding: 20px;
+    background-color: #ffffff;
+    color: #333;
 }
 
 h2 {
-    margin-bottom: 20px;
     font-size: 22px;
-}
-
-#status {
-    margin-bottom: 16px;
-}
-
-.status-name {
-    font-size: 20px;
     font-weight: bold;
+    margin-bottom: 20px;
+    text-align: left;
 }
 
-.status-sub {
-    font-size: 14px;
-    color: #555;
-    margin-top: 4px;
+.debug {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #444;
+    white-space: pre-wrap;
 }
 
+
+/* ================================
+   ボタン（共通）
+================================ */
 .btn {
     display: block;
-    width: 85%;                 /* ← 中央寄せ用の幅（必要なら調整可能） */
-    max-width: 420px;           /* ← 大きすぎを防止 */
-    text-align: center;
+    width: 85%;
+    max-width: 420px;
+    margin: 16px auto;
     padding: 15px;
-    margin: 12px auto;          /* ← ココが重要。左右 auto で中央寄せ */
-    border-radius: 10px;
+    text-align: center;
+    background-color: #007bff;
     color: white;
     text-decoration: none;
+    border-radius: 10px;
     font-size: 18px;
     font-weight: bold;
+
+    /* ボタン影（アクセント） */
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.25);
+    transition: 0.2s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
 }
 
 .btn-blue {
@@ -45,31 +59,78 @@ h2 {
     background-color: #28a745;
 }
 
-.form-container {
-    margin-top: 20px;
+
+/* ================================
+   入力フォーム
+================================ */
+
+/* ラベル */
+label {
+    display: block;
+    width: 85%;
+    max-width: 420px;
+    margin: 20px auto 6px;
+    font-size: 16px;
+    font-weight: bold;
 }
 
-.form-input {
-    width: 100%;
+/* 入力フィールド */
+input[type="text"],
+input[type="email"],
+textarea {
+    display: block;
+    width: 85%;
+    max-width: 420px;
     padding: 14px;
-    font-size: 18px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    margin: 12px auto;
+    font-size: 16px;
+
+    /* アクセシビリティ強化：濃い枠線 */
+    border: 2px solid #444;
+    border-radius: 8px;
+
+    background-color: #fff;
+    box-sizing: border-box;
 }
 
-.ok {
-    color: green;
-    padding: 10px;
+/* フォーカス時の強調 */
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus {
+    border: 2px solid #007bff; /* 濃い青で視認性UP */
+    outline: none;
+    background-color: #f7fbff;
 }
 
-.error {
-    color: red;
-    padding: 10px;
+
+/* ================================
+   テキストエリア
+================================ */
+textarea {
+    height: 80px;
+    resize: vertical;
 }
 
-.debug {
+
+/* ================================
+   ステータス/メニュー領域
+================================ */
+#status {
+    width: 100%;
+    margin: 20px 0;
+    font-size: 16px;
+}
+
+#menuArea {
     margin-top: 20px;
-    font-size: 12px;
-    color: #777;
+}
+
+
+/* ================================
+   コンテナ（必要なら）
+================================ */
+.container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
 }
