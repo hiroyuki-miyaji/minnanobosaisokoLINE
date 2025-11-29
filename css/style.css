@@ -73,6 +73,19 @@ h2 {
     background: #d9534f;
 }
 
+.btn-gray {
+    background: #9e9e9e;
+    color: #ffffff;
+    display: inline-block;
+    padding: 10px 16px;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 16px;
+}
+.btn-gray:hover {
+    background: #7d7d7d;
+}
+
 /* ホバー（スマホでも色が変わる） */
 .btn:hover {
     opacity: 0.85;
