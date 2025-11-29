@@ -75,9 +75,7 @@ async function loadList() {
     }
 
     document.getElementById("status").innerHTML =
-         "<div class='status-sub'>
-          登録件数：${items.length} 件
-          </div>";
+        "<div class='status-sub'>登録件数：" + items.length + " 件</div>";
 
     const area = document.getElementById("listArea");
     area.innerHTML = "";
