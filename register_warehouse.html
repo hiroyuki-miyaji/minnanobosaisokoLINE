@@ -91,10 +91,10 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
         authcode: document.getElementById("authcode").value
     };
 
-    debug("send payload: " + JSON.stringify(payload));
+    debug("send payload:OK");
 
     const res = await registerWarehouse(payload);
-    debug("response: " + JSON.stringify(res));
+    debug("response:OK");
 
     if (res.result === "success") {
         document.getElementById("msgArea").innerHTML =
