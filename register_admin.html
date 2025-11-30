@@ -60,7 +60,7 @@ async function main() {
     const profile = await getUserProfile();
     lineId = profile.userId;
 
-    debug("LINE Profile OK: " + lineId);
+    debug("LINE Profile OK");
 
     // --- 管理者情報取得 ---
     const res = await getAdmin(lineId);
