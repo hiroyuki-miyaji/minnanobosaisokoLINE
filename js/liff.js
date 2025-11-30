@@ -41,7 +41,7 @@ export async function initLiff() {
 export async function getUserProfile() {
     try {
         const p = await liff.getProfile();
-        debug("profile OK: " + p.userId);
+        debug("profile OK:init liff");
         return p;
     } catch (e) {
         debug("profile FAILED: " + e);
