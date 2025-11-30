@@ -58,7 +58,7 @@ async function main() {
     number = params.get("id");
     if (!number) {
         document.getElementById("status").innerHTML =
-            "<p class='error'>倉庫番号が指定されていません。</p>";
+            "<p class='error'>防災倉庫ナンバーが指定されていません。</p>";
         return;
     }
 
@@ -108,7 +108,12 @@ async function loadDetail() {
                    value="${w.password ?? ""}">
 
             <button id="btnSave" class="btn btn-green" style="margin-top:16px;">
-                保存する
+                💾 保存する
+            </button>
+
+            <!-- 🔥 追加：LINE登録削除ボタン -->
+            <button id="btnDelete" class="btn btn-red" style="margin-top:12px;">
+                🗑️ 登録を削除
             </button>
 
             <a href="./warehouse_detail.html?id=${encodeURIComponent(w.number)}"
@@ -121,6 +126,7 @@ async function loadDetail() {
     area.style.display = "block";
 
     document.getElementById("btnSave").addEventListener("click", save);
+    document.getElementById("btnDelete").addEventListener("click", removeRegistration);
 }
 
 /* ----------------------------------------
@@ -134,8 +140,6 @@ async function save() {
         stocks: document.getElementById("stocks").value,
         password: document.getElementById("password").value
     };
-
-    debug("update payload:OK");
 
     const res = await updateWarehouse(payload);
 
@@ -152,6 +156,35 @@ async function save() {
 
     document.getElementById("msgArea").innerHTML =
         "<p class='error'>更新に失敗しました。</p>";
+}
+
+/* ----------------------------------------
+   🔥 新規追加：登録削除処理
+----------------------------------------- */
+async function removeRegistration() {
+
+    if (!confirm("この登録を削除しますか？\n（防災倉庫の紐づけが解除されます）")) {
+        return;
+    }
+
+    const res = await deleteWarehouseRegistration({
+        LINEID: lineId,
+        number
+    });
+
+    if (res.result === "success") {
+
+        document.getElementById("msgArea").innerHTML =
+            "<p class='ok'>登録を削除しました。</p>";
+
+        setTimeout(() => {
+            location.href = "./list.html";
+        }, 1200);
+
+    } else {
+        document.getElementById("msgArea").innerHTML =
+            "<p class='error'>削除に失敗しました。</p>";
+    }
 }
 
 main();
