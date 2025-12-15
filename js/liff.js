@@ -1,3 +1,5 @@
+import { IS_DEV } from "./env.js";
+
 // js/liff.js  --- 共通ロジックのみ（UIは禁止）
 
 const LIFF_ID = "2008561144-5WLWMVPP";
@@ -6,6 +8,7 @@ const LIFF_ID = "2008561144-5WLWMVPP";
  * デバッグ出力
  */
 export function debug(msg) {
+    if (!IS_DEV) return;   // ★ 本番では完全に無効
     console.log(msg);
     const area = document.getElementById("debugArea");
     if (area) area.innerHTML += msg + "<br>";
